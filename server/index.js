@@ -47,7 +47,8 @@ io.on('connection', (socket) => {
       maxPlayers: 4,
       rounds: data.rounds || 5,
       currentRound: 0,
-      scores: {}
+      scores: {},
+      chatMessages: []
     };
 
     rooms.set(roomCode, room);
@@ -105,6 +106,18 @@ io.on('connection', (socket) => {
     // Broadcast to ALL players in the room (including the new one)
     io.to(roomCode).emit('room-updated', room);
     
+    // Send system message about player joining
+    const systemMessage = {
+      id: Date.now().toString(),
+      username: 'System',
+      message: `${username} joined the game`,
+      type: 'system',
+      timestamp: new Date().toLocaleTimeString(),
+      playerId: 'system'
+    };
+    room.chatMessages.push(systemMessage);
+    io.to(roomCode).emit('new-chat-message', systemMessage);
+    
     console.log(`👤 Player ${username} joined room ${roomCode}`);
     console.log(`👥 All players in room ${roomCode}:`, room.players.map(p => p.username));
   });
@@ -114,6 +127,19 @@ io.on('connection', (socket) => {
     const room = rooms.get(roomCode);
     if (room && room.host === socket.id && room.players.length >= 2) {
       room.gameState = 'starting';
+      
+      // Send system message
+      const systemMessage = {
+        id: Date.now().toString(),
+        username: 'System',
+        message: 'Game started! Roles are being assigned...',
+        type: 'system',
+        timestamp: new Date().toLocaleTimeString(),
+        playerId: 'system'
+      };
+      room.chatMessages.push(systemMessage);
+      io.to(roomCode).emit('new-chat-message', systemMessage);
+      
       initializeGame(room);
       io.to(roomCode).emit('game-started', room);
       console.log(`🚀 Game started in room ${roomCode}`);
@@ -132,9 +158,34 @@ io.on('connection', (socket) => {
           allRevealed: room.players.every(p => p.revealed)
         });
 
+        // Send system message about role reveal
+        const systemMessage = {
+          id: Date.now().toString(),
+          username: 'System',
+          message: `${player.username} revealed their role`,
+          type: 'system',
+          timestamp: new Date().toLocaleTimeString(),
+          playerId: 'system'
+        };
+        room.chatMessages.push(systemMessage);
+        io.to(roomCode).emit('new-chat-message', systemMessage);
+
         // If all players revealed, move to guessing phase
         if (room.players.every(p => p.revealed)) {
           room.gameState = 'guessing';
+          
+          const mantri = room.players.find(p => p.role === 'mantri');
+          const systemMessage = {
+            id: Date.now().toString(),
+            username: 'System',
+            message: `All roles revealed! ${mantri.username} (Mantri), find the Chor!`,
+            type: 'system',
+            timestamp: new Date().toLocaleTimeString(),
+            playerId: 'system'
+          };
+          room.chatMessages.push(systemMessage);
+          io.to(roomCode).emit('new-chat-message', systemMessage);
+          
           io.to(roomCode).emit('all-roles-revealed', room);
         }
       }
@@ -147,6 +198,20 @@ io.on('connection', (socket) => {
     if (room && room.gameState === 'guessing') {
       const mantri = room.players.find(p => p.role === 'mantri');
       if (mantri && mantri.id === socket.id) {
+        const guessedPlayer = room.players.find(p => p.id === guessedPlayerId);
+        
+        // Send system message about the guess
+        const guessMessage = {
+          id: Date.now().toString(),
+          username: 'System',
+          message: `${mantri.username} (Mantri) thinks ${guessedPlayer.username} is the Chor!`,
+          type: 'system',
+          timestamp: new Date().toLocaleTimeString(),
+          playerId: 'system'
+        };
+        room.chatMessages.push(guessMessage);
+        io.to(roomCode).emit('new-chat-message', guessMessage);
+        
         processGuess(room, guessedPlayerId);
         io.to(roomCode).emit('guess-processed', room);
         
@@ -157,10 +222,76 @@ io.on('connection', (socket) => {
             io.to(roomCode).emit('next-round-started', room);
           } else {
             room.gameState = 'finished';
+            
+            // Calculate winner
+            const winner = room.players.reduce((prev, current) => 
+              (room.scores[current.id] > room.scores[prev.id]) ? current : prev
+            );
+            
+            const winnerMessage = {
+              id: Date.now().toString(),
+              username: 'System',
+              message: `Game Over! ${winner.username} wins with ${room.scores[winner.id]} points! 🎉`,
+              type: 'system',
+              timestamp: new Date().toLocaleTimeString(),
+              playerId: 'system'
+            };
+            room.chatMessages.push(winnerMessage);
+            io.to(roomCode).emit('new-chat-message', winnerMessage);
+            
             io.to(roomCode).emit('game-finished', room);
           }
         }, 5000);
       }
+    }
+  });
+
+  // Handle chat messages
+  socket.on('send-chat-message', (data) => {
+    const { roomCode, message, username } = data;
+    const room = rooms.get(roomCode);
+    
+    if (room) {
+      const player = room.players.find(p => p.id === socket.id);
+      const safeUsername = username || player?.username || 'Unknown Player';
+      
+      const chatMessage = {
+        id: Date.now().toString(),
+        username: safeUsername,
+        message: message || '',
+        type: 'player',
+        timestamp: new Date().toLocaleTimeString(),
+        playerId: socket.id
+      };
+      
+      room.chatMessages.push(chatMessage);
+      
+      // Broadcast to all players in the room
+      io.to(roomCode).emit('new-chat-message', chatMessage);
+      console.log(`💬 ${safeUsername} in ${roomCode}: ${message}`);
+    }
+  });
+
+  // Handle emoji reactions
+  socket.on('send-emoji', (data) => {
+    const { roomCode, emoji, username } = data;
+    const room = rooms.get(roomCode);
+    
+    if (room) {
+      const player = room.players.find(p => p.id === socket.id);
+      const safeUsername = username || player?.username || 'Unknown Player';
+      
+      const emojiMessage = {
+        id: Date.now().toString(),
+        username: safeUsername,
+        emoji: emoji || '❓',
+        type: 'emoji',
+        timestamp: new Date().toLocaleTimeString(),
+        playerId: socket.id
+      };
+      
+      room.chatMessages.push(emojiMessage);
+      io.to(roomCode).emit('new-chat-message', emojiMessage);
     }
   });
 
@@ -179,12 +310,27 @@ io.on('connection', (socket) => {
     if (player) {
       const room = rooms.get(player.roomCode);
       if (room) {
+        const disconnectedPlayer = room.players.find(p => p.id === socket.id);
         room.players = room.players.filter(p => p.id !== socket.id);
         
         if (room.players.length === 0) {
           rooms.delete(player.roomCode);
           console.log(`🗑️ Room ${player.roomCode} deleted (empty)`);
         } else {
+          // Send system message about player leaving
+          if (disconnectedPlayer) {
+            const systemMessage = {
+              id: Date.now().toString(),
+              username: 'System',
+              message: `${disconnectedPlayer.username} left the game`,
+              type: 'system',
+              timestamp: new Date().toLocaleTimeString(),
+              playerId: 'system'
+            };
+            room.chatMessages.push(systemMessage);
+            io.to(player.roomCode).emit('new-chat-message', systemMessage);
+          }
+          
           // Update remaining players
           io.to(player.roomCode).emit('room-updated', room);
         }
@@ -198,6 +344,7 @@ function initializeGame(room) {
   // Initialize scores
   room.players.forEach(player => {
     room.scores[player.id] = 0;
+    player.score = 0;
   });
   startNewRound(room);
 }
@@ -219,6 +366,18 @@ function startNewRound(room) {
   room.mantriGuess = null;
   room.roundResult = null;
   
+  // Send system message about new round
+  const systemMessage = {
+    id: Date.now().toString(),
+    username: 'System',
+    message: `Round ${room.currentRound} started! Reveal your roles.`,
+    type: 'system',
+    timestamp: new Date().toLocaleTimeString(),
+    playerId: 'system'
+  };
+  room.chatMessages.push(systemMessage);
+  io.to(room.code).emit('new-chat-message', systemMessage);
+  
   console.log(`🔄 Round ${room.currentRound} started in room ${room.code}`);
   console.log(`🎭 Roles: ${room.players.map(p => `${p.username}: ${p.role}`).join(', ')}`);
 }
@@ -237,11 +396,21 @@ function processGuess(room, guessedPlayerId) {
     room.scores[raja.id] += 1000;
     room.scores[sipahi.id] += 500;
     room.scores[chor.id] += 0;
+    
+    // Update player objects
+    mantri.score += 800;
+    raja.score += 1000;
+    sipahi.score += 500;
   } else {
     room.scores[mantri.id] += 0;
     room.scores[raja.id] += 1000;
     room.scores[chor.id] += 1200; // Chor gets bonus if not caught
     room.scores[sipahi.id] += 500;
+    
+    // Update player objects
+    raja.score += 1000;
+    chor.score += 1200;
+    sipahi.score += 500;
   }
 
   room.roundResult = {
@@ -252,6 +421,26 @@ function processGuess(room, guessedPlayerId) {
   };
 
   room.gameState = 'round-result';
+  
+  // Send system message with round result
+  const guessedPlayer = room.players.find(p => p.id === guessedPlayerId);
+  let resultMessage;
+  if (isCorrect) {
+    resultMessage = `Correct! ${guessedPlayer.username} was the Chor! 🎯`;
+  } else {
+    resultMessage = `Wrong! ${guessedPlayer.username} was not the Chor. The real Chor was ${chor.username}!`;
+  }
+  
+  const systemMessage = {
+    id: Date.now().toString(),
+    username: 'System',
+    message: resultMessage,
+    type: 'system',
+    timestamp: new Date().toLocaleTimeString(),
+    playerId: 'system'
+  };
+  room.chatMessages.push(systemMessage);
+  io.to(room.code).emit('new-chat-message', systemMessage);
 }
 
 // Basic route to check if server is running
@@ -259,12 +448,48 @@ app.get('/', (req, res) => {
   res.json({ 
     message: 'Raja Mantri Chor Sipahi Server is running!',
     activeRooms: rooms.size,
-    activePlayers: players.size
+    activePlayers: players.size,
+    version: '1.0.0'
   });
+});
+
+// Get room info
+app.get('/room/:roomCode', (req, res) => {
+  const room = rooms.get(req.params.roomCode.toUpperCase());
+  if (room) {
+    res.json({
+      code: room.code,
+      players: room.players.map(p => ({
+        username: p.username,
+        isHost: p.isHost,
+        score: p.score
+      })),
+      gameState: room.gameState,
+      currentRound: room.currentRound,
+      rounds: room.rounds
+    });
+  } else {
+    res.status(404).json({ error: 'Room not found' });
+  }
+});
+
+// Get all active rooms (for debugging)
+app.get('/rooms', (req, res) => {
+  const roomList = Array.from(rooms.values()).map(room => ({
+    code: room.code,
+    players: room.players.length,
+    gameState: room.gameState,
+    currentRound: room.currentRound
+  }));
+  res.json({ rooms: roomList });
 });
 
 // Start server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`🎯 Server running on http://localhost:${PORT}`);
+  console.log(`📊 API endpoints available:`);
+  console.log(`   GET /              - Server status`);
+  console.log(`   GET /rooms         - List all active rooms`);
+  console.log(`   GET /room/:code    - Get room info`);
 });
