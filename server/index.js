@@ -20,9 +20,253 @@ app.use(express.json());
 const rooms = new Map();
 const players = new Map();
 
+// Bot player names and personalities
+const BOT_NAMES = [
+  'RajaBot', 'MantriMaster', 'ChorAI', 'SipahiBot',
+  'RoyalAI', 'StrategyBot', 'GameMaster', 'SmartPlayer'
+];
+
+const BOT_PERSONALITIES = {
+  SMART: 'smart',      // 70% correct guesses
+  RANDOM: 'random',    // 25% correct guesses  
+  NOVICE: 'novice'     // 10% correct guesses
+};
+
 // Generate random room code
 function generateRoomCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
+
+// Create computer player
+function createComputerPlayer(room, index, personality = BOT_PERSONALITIES.SMART) {
+  const usedNames = room.players.map(p => p.username);
+  const availableNames = BOT_NAMES.filter(name => !usedNames.includes(name));
+  const botName = availableNames[index] || `AI_Player_${index + 1}`;
+  
+  return {
+    id: `bot-${Date.now()}-${index}`,
+    username: botName,
+    isHost: false,
+    connected: true,
+    ready: true,
+    score: 0,
+    isBot: true,
+    personality: personality,
+    revealed: false
+  };
+}
+
+// Bot reveals role automatically
+function botRevealRole(room, botPlayer) {
+  const delay = 1000 + (Math.random() * 3000); // 1-4 seconds delay
+  
+  setTimeout(() => {
+    botPlayer.revealed = true;
+    
+    // Notify all players
+    io.to(room.code).emit('player-revealed', {
+      playerId: botPlayer.id,
+      allRevealed: room.players.every(p => p.revealed)
+    });
+
+    // System message
+    const systemMessage = {
+      id: Date.now().toString(),
+      username: 'System',
+      message: `${botPlayer.username} revealed their role`,
+      type: 'system',
+      timestamp: new Date().toLocaleTimeString(),
+      playerId: 'system'
+    };
+    room.chatMessages.push(systemMessage);
+    io.to(room.code).emit('new-chat-message', systemMessage);
+
+    // If all revealed, move to guessing phase
+    if (room.players.every(p => p.revealed)) {
+      room.gameState = 'guessing';
+      
+      const mantri = room.players.find(p => p.role === 'mantri');
+      const systemMessage = {
+        id: Date.now().toString(),
+        username: 'System',
+        message: `All roles revealed! ${mantri.username} (Mantri), find the Chor!`,
+        type: 'system',
+        timestamp: new Date().toLocaleTimeString(),
+        playerId: 'system'
+      };
+      room.chatMessages.push(systemMessage);
+      io.to(room.code).emit('new-chat-message', systemMessage);
+      
+      io.to(room.code).emit('all-roles-revealed', room);
+      
+      // If Mantri is bot, auto-guess
+      if (mantri.isBot) {
+        botMakeGuess(room, mantri);
+      }
+    }
+  }, delay);
+}
+
+// Bot makes intelligent guess
+function botMakeGuess(room, mantriBot) {
+  const thinkingTime = 2000 + (Math.random() * 5000); // 2-7 seconds
+  
+  setTimeout(() => {
+    const chor = room.players.find(p => p.role === 'chor');
+    const possibleTargets = room.players.filter(p => 
+      p.role !== 'mantri' && p.role !== 'raja' && p.id !== mantriBot.id
+    );
+    
+    let guessedPlayerId;
+    let guessAccuracy;
+
+    // Different strategies based on bot personality
+    switch (mantriBot.personality) {
+      case BOT_PERSONALITIES.SMART:
+        guessAccuracy = 0.7; // 70% accurate
+        break;
+      case BOT_PERSONALITIES.RANDOM:
+        guessAccuracy = 0.25; // 25% accurate
+        break;
+      case BOT_PERSONALITIES.NOVICE:
+        guessAccuracy = 0.1; // 10% accurate
+        break;
+      default:
+        guessAccuracy = 0.5;
+    }
+
+    const shouldGuessCorrectly = Math.random() < guessAccuracy;
+    
+    if (shouldGuessCorrectly && chor && !chor.isBot) {
+      // Smart guess - target the actual chor if it's a human
+      guessedPlayerId = chor.id;
+    } else if (shouldGuessCorrectly && chor && chor.isBot) {
+      // If chor is bot, sometimes guess correctly based on personality
+      const botVsBotAccuracy = Math.random() < 0.6; // 60% accuracy bot vs bot
+      guessedPlayerId = botVsBotAccuracy ? chor.id : getRandomTarget(possibleTargets);
+    } else {
+      // Random guess
+      guessedPlayerId = getRandomTarget(possibleTargets);
+    }
+
+    // Ensure we have a valid target
+    if (!guessedPlayerId && possibleTargets.length > 0) {
+      guessedPlayerId = getRandomTarget(possibleTargets);
+    }
+
+    const guessedPlayer = room.players.find(p => p.id === guessedPlayerId);
+    
+    if (guessedPlayer) {
+      // Send bot thinking message
+      const thinkingMessage = {
+        id: Date.now().toString(),
+        username: 'System',
+        message: `${mantriBot.username} is thinking carefully... 🤔`,
+        type: 'system',
+        timestamp: new Date().toLocaleTimeString(),
+        playerId: 'system'
+      };
+      room.chatMessages.push(thinkingMessage);
+      io.to(room.code).emit('new-chat-message', thinkingMessage);
+
+      // Small delay before actual guess
+      setTimeout(() => {
+        const guessMessage = {
+          id: Date.now().toString(),
+          username: 'System',
+          message: `${mantriBot.username} (Mantri) thinks ${guessedPlayer.username} is the Chor!`,
+          type: 'system',
+          timestamp: new Date().toLocaleTimeString(),
+          playerId: 'system'
+        };
+        room.chatMessages.push(guessMessage);
+        io.to(room.code).emit('new-chat-message', guessMessage);
+        
+        processGuess(room, guessedPlayerId);
+        io.to(room.code).emit('guess-processed', room);
+        
+        // Move to next round
+        scheduleNextRound(room);
+      }, 1500);
+    }
+  }, thinkingTime);
+}
+
+// Helper function to get random target
+function getRandomTarget(possibleTargets) {
+  if (possibleTargets.length === 0) return null;
+  const randomIndex = Math.floor(Math.random() * possibleTargets.length);
+  return possibleTargets[randomIndex].id;
+}
+
+// Schedule next round
+function scheduleNextRound(room) {
+  setTimeout(() => {
+    if (room.currentRound < room.rounds) {
+      startNewRound(room);
+      io.to(room.code).emit('next-round-started', room);
+    } else {
+      room.gameState = 'finished';
+      
+      // Calculate winner
+      const winner = room.players.reduce((prev, current) => 
+        (room.scores[current.id] > room.scores[prev.id]) ? current : prev
+      );
+      
+      const winnerMessage = {
+        id: Date.now().toString(),
+        username: 'System',
+        message: `Game Over! ${winner.username} wins with ${room.scores[winner.id]} points! 🎉`,
+        type: 'system',
+        timestamp: new Date().toLocaleTimeString(),
+        playerId: 'system'
+      };
+      room.chatMessages.push(winnerMessage);
+      io.to(room.code).emit('new-chat-message', winnerMessage);
+      
+      io.to(room.code).emit('game-finished', room);
+    }
+  }, 5000);
+}
+
+// Bot sends occasional chat messages
+function botSendChatMessage(room, botPlayer) {
+  if (Math.random() < 0.3) { // 30% chance to send message
+    const messages = [
+      "This is fun! 🎮",
+      "Good game everyone!",
+      "I think I know who the Chor is... 🤔",
+      "Let's see how this round goes!",
+      "Interesting roles this round!",
+      "The King looks suspicious 👀",
+      "I'm watching everyone carefully!",
+      "This is getting exciting!",
+      "Nice move!",
+      "Let me think about this...",
+      "The plot thickens!",
+      "I have a theory...",
+      "This is a challenging round!",
+      "Well played!",
+      "The game is afoot! 🕵️"
+    ];
+    
+    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+    const delay = 3000 + (Math.random() * 10000); // 3-13 seconds
+    
+    setTimeout(() => {
+      const chatMessage = {
+        id: Date.now().toString(),
+        username: botPlayer.username,
+        message: randomMessage,
+        type: 'player',
+        timestamp: new Date().toLocaleTimeString(),
+        playerId: botPlayer.id
+      };
+      
+      room.chatMessages.push(chatMessage);
+      io.to(room.code).emit('new-chat-message', chatMessage);
+    }, delay);
+  }
 }
 
 // Socket connection handling
@@ -41,14 +285,18 @@ io.on('connection', (socket) => {
         isHost: true,
         connected: true,
         ready: false,
-        score: 0
+        score: 0,
+        isBot: false
       }],
       gameState: 'waiting',
       maxPlayers: 4,
       rounds: data.rounds || 5,
       currentRound: 0,
       scores: {},
-      chatMessages: []
+      chatMessages: [],
+      addBots: data.addBots || false,
+      botCount: data.botCount || 0,
+      botDifficulty: data.botDifficulty || 'smart'
     };
 
     rooms.set(roomCode, room);
@@ -92,7 +340,8 @@ io.on('connection', (socket) => {
       isHost: false,
       connected: true,
       ready: false,
-      score: 0
+      score: 0,
+      isBot: false
     };
 
     room.players.push(player);
@@ -127,6 +376,31 @@ io.on('connection', (socket) => {
     const room = rooms.get(roomCode);
     if (room && room.host === socket.id && room.players.length >= 2) {
       room.gameState = 'starting';
+      
+      // Add bots if enabled
+      if (room.addBots && room.players.length < 4) {
+        const botsNeeded = Math.min(4 - room.players.length, room.botCount || 2);
+        
+        for (let i = 0; i < botsNeeded; i++) {
+          const personality = room.botDifficulty || BOT_PERSONALITIES.SMART;
+          const botPlayer = createComputerPlayer(room, i, personality);
+          room.players.push(botPlayer);
+          
+          // Send system message
+          const systemMessage = {
+            id: Date.now().toString(),
+            username: 'System',
+            message: `${botPlayer.username} (AI - ${personality}) joined the game`,
+            type: 'system',
+            timestamp: new Date().toLocaleTimeString(),
+            playerId: 'system'
+          };
+          room.chatMessages.push(systemMessage);
+          io.to(roomCode).emit('new-chat-message', systemMessage);
+        }
+        
+        console.log(`🤖 Added ${botsNeeded} bots to room ${roomCode}`);
+      }
       
       // Send system message
       const systemMessage = {
@@ -187,6 +461,11 @@ io.on('connection', (socket) => {
           io.to(roomCode).emit('new-chat-message', systemMessage);
           
           io.to(roomCode).emit('all-roles-revealed', room);
+          
+          // If Mantri is bot, auto-guess
+          if (mantri.isBot) {
+            botMakeGuess(room, mantri);
+          }
         }
       }
     }
@@ -216,32 +495,7 @@ io.on('connection', (socket) => {
         io.to(roomCode).emit('guess-processed', room);
         
         // Move to next round after a delay
-        setTimeout(() => {
-          if (room.currentRound < room.rounds) {
-            startNewRound(room);
-            io.to(roomCode).emit('next-round-started', room);
-          } else {
-            room.gameState = 'finished';
-            
-            // Calculate winner
-            const winner = room.players.reduce((prev, current) => 
-              (room.scores[current.id] > room.scores[prev.id]) ? current : prev
-            );
-            
-            const winnerMessage = {
-              id: Date.now().toString(),
-              username: 'System',
-              message: `Game Over! ${winner.username} wins with ${room.scores[winner.id]} points! 🎉`,
-              type: 'system',
-              timestamp: new Date().toLocaleTimeString(),
-              playerId: 'system'
-            };
-            room.chatMessages.push(winnerMessage);
-            io.to(roomCode).emit('new-chat-message', winnerMessage);
-            
-            io.to(roomCode).emit('game-finished', room);
-          }
-        }, 5000);
+        scheduleNextRound(room);
       }
     }
   });
@@ -378,10 +632,19 @@ function startNewRound(room) {
   room.chatMessages.push(systemMessage);
   io.to(room.code).emit('new-chat-message', systemMessage);
   
+  // Auto-reveal bot players' roles and schedule chat messages
+  room.players.forEach(player => {
+    if (player.isBot) {
+      botRevealRole(room, player);
+      botSendChatMessage(room, player);
+    }
+  });
+  
   console.log(`🔄 Round ${room.currentRound} started in room ${room.code}`);
   console.log(`🎭 Roles: ${room.players.map(p => `${p.username}: ${p.role}`).join(', ')}`);
 }
 
+// UPDATED processGuess function with oldScores for comparison
 function processGuess(room, guessedPlayerId) {
   const chor = room.players.find(p => p.role === 'chor');
   const mantri = room.players.find(p => p.role === 'mantri');
@@ -389,6 +652,9 @@ function processGuess(room, guessedPlayerId) {
   const sipahi = room.players.find(p => p.role === 'sipahi');
 
   const isCorrect = chor.id === guessedPlayerId;
+
+  // Store old scores for comparison
+  const oldScores = { ...room.scores };
 
   // Calculate scores
   if (isCorrect) {
@@ -417,7 +683,8 @@ function processGuess(room, guessedPlayerId) {
     isCorrect,
     guessedPlayerId,
     actualChorId: chor.id,
-    scores: { ...room.scores }
+    scores: { ...room.scores },
+    oldScores: oldScores // Include old scores for comparison
   };
 
   room.gameState = 'round-result';
@@ -462,7 +729,8 @@ app.get('/room/:roomCode', (req, res) => {
       players: room.players.map(p => ({
         username: p.username,
         isHost: p.isHost,
-        score: p.score
+        score: p.score,
+        isBot: p.isBot || false
       })),
       gameState: room.gameState,
       currentRound: room.currentRound,

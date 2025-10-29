@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { useSocket } from '../contexts/SocketContext';
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { useSocket } from "../contexts/SocketContext";
 
 const Lobby = () => {
   const { roomCode } = useParams();
@@ -13,22 +13,22 @@ const Lobby = () => {
 
   useEffect(() => {
     if (!socket) {
-      console.log('❌ Socket not available');
+      console.log("❌ Socket not available");
       return;
     }
 
-    console.log('✅ Setting up socket listeners for room:', roomCode);
+    console.log("✅ Setting up socket listeners for room:", roomCode);
 
     // Handle initial room data
     const handleRoomCreated = (roomData) => {
-      console.log('🎮 Room created data:', roomData);
+      console.log("🎮 Room created data:", roomData);
       setRoom(roomData);
       setPlayers(roomData.players || []);
       setLoading(false);
     };
 
     const handleRoomJoined = (roomData) => {
-      console.log('👤 Room joined data:', roomData);
+      console.log("👤 Room joined data:", roomData);
       setRoom(roomData);
       setPlayers(roomData.players || []);
       setLoading(false);
@@ -36,7 +36,7 @@ const Lobby = () => {
 
     // Handle room updates (when players join/leave)
     const handleRoomUpdated = (roomData) => {
-      console.log('🔄 Room updated:', roomData);
+      console.log("🔄 Room updated:", roomData);
       setRoom(roomData);
       setPlayers(roomData.players || []);
       setLoading(false);
@@ -44,77 +44,87 @@ const Lobby = () => {
 
     // Handle player joining
     const handlePlayerJoined = (player) => {
-      console.log('🟢 Player joined:', player);
-      setPlayers(prev => {
+      console.log("🟢 Player joined:", player);
+      setPlayers((prev) => {
         // Avoid duplicates
-        if (prev.find(p => p.id === player.id)) return prev;
+        if (prev.find((p) => p.id === player.id)) return prev;
         return [...prev, player];
       });
     };
 
     // Handle errors
     const handleError = (error) => {
-      console.log('❌ Socket error:', error);
+      console.log("❌ Socket error:", error);
       alert(error);
       setLoading(false);
     };
 
     // Handle game start
     const handleGameStarted = (roomData) => {
-      console.log('🚀 Game started, navigating to game room');
+      console.log("🚀 Game started, navigating to game room");
       navigate(`/game/${roomCode}`);
     };
 
     // Set up all listeners
-    socket.on('room-created', handleRoomCreated);
-    socket.on('room-joined', handleRoomJoined);
-    socket.on('room-updated', handleRoomUpdated);
-    socket.on('player-joined', handlePlayerJoined);
-    socket.on('error', handleError);
-    socket.on('game-started', handleGameStarted);
+    socket.on("room-created", handleRoomCreated);
+    socket.on("room-joined", handleRoomJoined);
+    socket.on("room-updated", handleRoomUpdated);
+    socket.on("player-joined", handlePlayerJoined);
+    socket.on("error", handleError);
+    socket.on("game-started", handleGameStarted);
 
     // Request room update when component mounts
-    socket.emit('request-room-update', roomCode);
+    socket.emit("request-room-update", roomCode);
 
     // Cleanup function
     return () => {
-      console.log('🧹 Cleaning up socket listeners');
-      socket.off('room-created', handleRoomCreated);
-      socket.off('room-joined', handleRoomJoined);
-      socket.off('room-updated', handleRoomUpdated);
-      socket.off('player-joined', handlePlayerJoined);
-      socket.off('error', handleError);
-      socket.off('game-started', handleGameStarted);
+      console.log("🧹 Cleaning up socket listeners");
+      socket.off("room-created", handleRoomCreated);
+      socket.off("room-joined", handleRoomJoined);
+      socket.off("room-updated", handleRoomUpdated);
+      socket.off("player-joined", handlePlayerJoined);
+      socket.off("error", handleError);
+      socket.off("game-started", handleGameStarted);
     };
   }, [socket, roomCode, navigate]);
 
   const handleStartGame = () => {
-    console.log('🎯 Starting game for room:', roomCode);
-    socket.emit('start-game', roomCode);
+    console.log("🎯 Starting game for room:", roomCode);
+    socket.emit("start-game", roomCode);
   };
 
   const copyRoomCode = () => {
     navigator.clipboard.writeText(roomCode);
-    alert('Room code copied to clipboard!');
+    alert("Room code copied to clipboard!");
   };
 
   // Debug: Log current state
   useEffect(() => {
-    console.log('📊 Current players:', players);
-    console.log('📊 Current room:', room);
+    console.log("📊 Current players:", players);
+    console.log("📊 Current room:", room);
   }, [players, room]);
 
-  const currentPlayer = players.find(p => p.id === socket?.id);
+  const currentPlayer = players.find((p) => p.id === socket?.id);
   const isHost = currentPlayer?.isHost;
+  const humanPlayers = players.filter((p) => !p.isBot);
+  const botPlayers = players.filter((p) => p.isBot);
+
+  // Get planned bot count from room settings
+  const plannedBotCount = room?.addBots ? room?.botCount || 0 : 0;
+  const actualBotCount = botPlayers.length;
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Loading Room...</h2>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">
+            Loading Room...
+          </h2>
           <p className="text-gray-600">Connecting to room: {roomCode}</p>
-          <p className="text-sm text-gray-500 mt-2">Socket: {socket?.id ? 'Connected' : 'Connecting...'}</p>
+          <p className="text-sm text-gray-500 mt-2">
+            Socket: {socket?.id ? "Connected" : "Connecting..."}
+          </p>
         </div>
       </div>
     );
@@ -142,13 +152,28 @@ const Lobby = () => {
           </div>
           {room && (
             <p className="text-gray-600 mt-2">
-              Rounds: {room.rounds} • {players.length}/4 Players
+              Rounds: {room.rounds} • {humanPlayers.length} Human
+              {humanPlayers.length !== 1 ? "s" : ""} • {plannedBotCount} AI{" "}
+              {plannedBotCount > 0 && actualBotCount === 0
+                ? "(will join on start)"
+                : ""}
             </p>
           )}
           {/* Debug info */}
           <div className="mt-2 text-xs text-gray-500 bg-gray-100 p-2 rounded">
-            <p>Socket: {socket?.id ? `Connected (${socket.id})` : 'Disconnected'}</p>
-            <p>Players visible: {players.length}</p>
+            <p>
+              Socket: {socket?.id ? `Connected (${socket.id})` : "Disconnected"}
+            </p>
+            <p>
+              Players visible: {players.length} (Humans: {humanPlayers.length},
+              Bots: {actualBotCount})
+            </p>
+            <p>
+              Planned Bots: {plannedBotCount}{" "}
+              {room?.addBots
+                ? `(${room?.botDifficulty || "smart"})`
+                : "(disabled)"}
+            </p>
             <p>Your ID: {socket?.id}</p>
           </div>
         </div>
@@ -157,7 +182,7 @@ const Lobby = () => {
           <h2 className="text-xl font-semibold text-gray-700 mb-4">
             Players ({players.length}/4)
           </h2>
-          
+
           {players.length === 0 ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto mb-4"></div>
@@ -172,10 +197,16 @@ const Lobby = () => {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
                   className={`bg-gray-50 rounded-lg p-4 flex items-center space-x-3 border-2 ${
-                    player.id === socket?.id ? 'border-amber-400 bg-amber-50' : 'border-gray-200'
-                  }`}
+                    player.id === socket?.id
+                      ? "border-amber-400 bg-amber-50"
+                      : "border-gray-200"
+                  } ${player.isBot ? "border-blue-300 bg-blue-50" : ""}`}
                 >
-                  <div className="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center text-white font-semibold text-lg">
+                  <div
+                    className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold text-lg ${
+                      player.isBot ? "bg-blue-500" : "bg-amber-500"
+                    }`}
+                  >
                     {player.username[0].toUpperCase()}
                   </div>
                   <div className="flex-1">
@@ -184,18 +215,34 @@ const Lobby = () => {
                       {player.id === socket?.id && (
                         <span className="text-amber-600 ml-2">(You)</span>
                       )}
+                      {player.isBot && (
+                        <span className="text-blue-600 ml-2">🤖 AI</span>
+                      )}
                     </p>
                     <div className="flex space-x-2 mt-1">
                       {player.isHost && (
-                        <span className="text-xs bg-amber-500 text-white px-2 py-1 rounded-full">Host</span>
+                        <span className="text-xs bg-amber-500 text-white px-2 py-1 rounded-full">
+                          Host
+                        </span>
                       )}
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        player.connected ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-                      }`}>
-                        {player.connected ? 'Online' : 'Offline'}
+                      {player.isBot && (
+                        <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded-full">
+                          AI Player
+                        </span>
+                      )}
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full ${
+                          player.connected
+                            ? "bg-green-500 text-white"
+                            : "bg-red-500 text-white"
+                        }`}
+                      >
+                        {player.connected ? "Online" : "Offline"}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">ID: {player.id.substring(0, 8)}...</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      ID: {player.id.substring(0, 8)}...
+                    </p>
                   </div>
                 </motion.div>
               ))}
@@ -209,10 +256,10 @@ const Lobby = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleStartGame}
-              disabled={players.length < 2}
+              disabled={humanPlayers.length < 2}
               className="bg-green-600 text-white py-3 px-8 rounded-lg font-semibold text-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Start Game ({players.length}/4 players)
+              Start Game ({humanPlayers.length}/4 humans)
             </motion.button>
           ) : (
             <motion.div
@@ -220,25 +267,38 @@ const Lobby = () => {
               animate={{ opacity: 1 }}
               className="bg-blue-100 text-blue-800 py-3 px-6 rounded-lg"
             >
-              <p className="font-semibold">Waiting for host to start the game...</p>
-              <p className="text-sm mt-1">Host: {players.find(p => p.isHost)?.username}</p>
+              <p className="font-semibold">
+                Waiting for host to start the game...
+              </p>
+              <p className="text-sm mt-1">
+                Host: {players.find((p) => p.isHost)?.username}
+              </p>
             </motion.div>
           )}
-          
-          {players.length < 2 && (
-            <p className="text-red-500 text-sm mt-2">Need at least 2 players to start</p>
+
+          {humanPlayers.length < 2 && (
+            <p className="text-red-500 text-sm mt-2">
+              Need at least 2 human players to start
+            </p>
           )}
         </div>
 
         <div className="mt-8 text-center text-sm text-gray-500">
           <p>Share the room code with your friends to invite them!</p>
-          <p className="mt-1">Make sure all players are connected to see each other.</p>
+          {plannedBotCount > 0 ? (
+            <p className="mt-1 text-blue-600 font-semibold">
+              🤖 {plannedBotCount} AI player{plannedBotCount !== 1 ? "s" : ""}{" "}
+              will join automatically when the game starts
+            </p>
+          ) : (
+            <p className="mt-1">No AI players configured for this game</p>
+          )}
         </div>
 
         {/* Debug controls */}
         <div className="mt-6 text-center">
           <button
-            onClick={() => socket.emit('request-room-update', roomCode)}
+            onClick={() => socket.emit("request-room-update", roomCode)}
             className="text-xs bg-gray-200 text-gray-700 px-3 py-1 rounded"
           >
             Refresh Room Data
