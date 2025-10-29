@@ -7,6 +7,10 @@ const Home = () => {
   const [username, setUsername] = useState('');
   const [roomCode, setRoomCode] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [rounds, setRounds] = useState(5);
+  const [addBots, setAddBots] = useState(false);
+  const [botCount, setBotCount] = useState(1);
+  const [botDifficulty, setBotDifficulty] = useState('smart');
   const navigate = useNavigate();
   const { socket } = useSocket();
 
@@ -19,7 +23,10 @@ const Home = () => {
     setIsCreating(true);
     socket.emit('create-room', {
       username: username,
-      rounds: 5
+      rounds: rounds,
+      addBots: addBots,
+      botCount: botCount,
+      botDifficulty: botDifficulty
     });
   };
 
@@ -95,6 +102,108 @@ const Home = () => {
             />
           </div>
 
+          {/* Round Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Number of Rounds
+            </label>
+            <div className="flex space-x-2">
+              {[10, 15, 20, 25].map((round) => (
+                <motion.button
+                  key={round}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setRounds(round)}
+                  className={`flex-1 py-2 px-3 rounded-lg font-semibold transition-colors ${
+                    rounds === round
+                      ? 'bg-amber-500 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  {round}
+                </motion.button>
+              ))}
+            </div>
+          </div>
+
+          {/* Bot Options */}
+          <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="flex items-center justify-between">
+              <label className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  checked={addBots}
+                  onChange={(e) => setAddBots(e.target.checked)}
+                  className="w-4 h-4 text-amber-600 focus:ring-amber-500"
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  Add AI Players 🤖
+                </span>
+              </label>
+            </div>
+
+            {addBots && (
+              <div className="space-y-3 pl-7">
+                {/* Bot Count */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-2">
+                    Number of AI Players
+                  </label>
+                  <div className="flex space-x-2">
+                    {[1, 2, 3].map((count) => (
+                      <motion.button
+                        key={count}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setBotCount(count)}
+                        className={`flex-1 py-1 px-2 rounded text-xs font-semibold transition-colors ${
+                          botCount === count
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-blue-200 text-blue-700 hover:bg-blue-300'
+                        }`}
+                      >
+                        {count}
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Bot Difficulty */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-2">
+                    AI Difficulty
+                  </label>
+                  <div className="flex space-x-2">
+                    {[
+                      { value: 'smart', label: 'Smart', desc: '70% win' },
+                      { value: 'random', label: 'Medium', desc: '25% win' },
+                      { value: 'novice', label: 'Easy', desc: '10% win' }
+                    ].map((difficulty) => (
+                      <motion.button
+                        key={difficulty.value}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setBotDifficulty(difficulty.value)}
+                        className={`flex-1 py-1 px-2 rounded text-xs font-semibold transition-colors ${
+                          botDifficulty === difficulty.value
+                            ? 'bg-green-500 text-white'
+                            : 'bg-green-200 text-green-700 hover:bg-green-300'
+                        }`}
+                        title={difficulty.desc}
+                      >
+                        {difficulty.label}
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+
+                <p className="text-xs text-blue-600">
+                  🤖 AI players will join automatically to fill empty spots
+                </p>
+              </div>
+            )}
+          </div>
+
           <div className="space-y-4">
             <motion.button
               whileHover={{ scale: 1.02 }}
@@ -140,7 +249,12 @@ const Home = () => {
         </div>
 
         <div className="mt-8 text-center text-sm text-gray-500">
-          <p>Up to 4 players • Real-time multiplayer • Royal strategy game</p>
+          <p>Up to 4 players • {rounds} rounds • Real-time multiplayer</p>
+          {addBots && (
+            <p className="text-blue-600">
+              🤖 {botCount} AI player{botCount > 1 ? 's' : ''} ({botDifficulty} difficulty)
+            </p>
+          )}
         </div>
       </motion.div>
     </div>
