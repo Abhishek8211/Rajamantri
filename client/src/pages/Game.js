@@ -160,7 +160,7 @@ const Game = () => {
       setMantriCalledSipahi(true);
       setGameState("sipahi-guessing");
       setSipahiTimer(120);
-      
+
       // Start timer for Sipahi if they're human
       const sipahi = players.find((p) => p.role === "sipahi");
       if (sipahi && !sipahi.isBot) {
@@ -172,7 +172,7 @@ const Game = () => {
       console.log("🎯 Sipahi guessed:", data);
       setIsSipahiTimerRunning(false);
       setGameState("concluding-scores");
-      
+
       // Wait 5 seconds before showing result
       setTimeout(() => {
         // Result will be handled by guess-processed event
@@ -190,7 +190,7 @@ const Game = () => {
       // Store round history
       setRoundHistory((prev) => ({
         ...prev,
-        [currentRound]: roomData.roundResult
+        [currentRound]: roomData.roundResult,
       }));
 
       // Update player scores
@@ -210,13 +210,13 @@ const Game = () => {
     const handleGameFinished = (roomData) => {
       console.log("🎊 Game finished:", roomData);
       setScores(roomData.scores || {});
-      
+
       // Find the winner
-      const sortedPlayers = roomData.players.sort((a, b) => 
-        (roomData.scores[b.id] || 0) - (roomData.scores[a.id] || 0)
+      const sortedPlayers = roomData.players.sort(
+        (a, b) => (roomData.scores[b.id] || 0) - (roomData.scores[a.id] || 0)
       );
       const winningPlayer = sortedPlayers[0];
-      
+
       setWinner(winningPlayer);
       setShowWinner(true);
     };
@@ -263,7 +263,7 @@ const Game = () => {
       setCurrentRound(roomData.currentRound || 1);
       setGameState(roomData.gameState || "role-assignment");
       setScores(roomData.scores || {});
-      
+
       // Find my role
       const myPlayer = roomData.players.find((p) => p.id === socket.id);
       if (myPlayer) {
@@ -328,17 +328,17 @@ const Game = () => {
     console.log("Room code:", roomCode);
     console.log("Game state:", gameState);
     console.log("My role:", myRole);
-    
+
     if (!socket || !socket.connected) {
       console.error("❌ Socket not connected!");
       return;
     }
-    
+
     if (!roomCode) {
       console.error("❌ No room code!");
       return;
     }
-    
+
     setIsTimerRunning(false);
     socket.emit("mantri-call-sipahi", roomCode);
     console.log("✅ Event emitted!");
@@ -396,7 +396,7 @@ const Game = () => {
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   const getTimerColor = () => {
@@ -423,7 +423,7 @@ const Game = () => {
               alt="RajaMantri Logo"
               className="w-10 h-10 rounded-full border-2 border-amber-400 object-cover"
               onError={(e) => {
-                e.target.style.display = 'none';
+                e.target.style.display = "none";
               }}
             />
             <div>
@@ -441,13 +441,15 @@ const Game = () => {
               whileTap={{ scale: 0.95 }}
               onClick={() => {
                 navigator.clipboard.writeText(roomCode);
-                alert('Room code copied!');
+                alert("Room code copied!");
               }}
               className="bg-amber-500/20 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-amber-400/30 hover:bg-amber-500/30 transition-all cursor-pointer"
             >
               <div className="flex items-center gap-1.5">
                 <span className="text-xs text-amber-200">Room:</span>
-                <span className="text-sm text-amber-100 font-bold">{roomCode}</span>
+                <span className="text-sm text-amber-100 font-bold">
+                  {roomCode}
+                </span>
                 <span className="text-xs">📋</span>
               </div>
             </motion.button>
@@ -455,20 +457,25 @@ const Game = () => {
             {/* Round */}
             <div className="bg-blue-500/20 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-blue-400/30 flex items-center gap-1.5">
               <span className="text-xs text-blue-200">Round:</span>
-              <span className="text-sm font-bold text-white">{currentRound}/{room?.rounds || "?"}</span>
+              <span className="text-sm font-bold text-white">
+                {currentRound}/{room?.rounds || "?"}
+              </span>
             </div>
 
             {/* Players */}
             <div className="bg-green-500/20 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-green-400/30 flex items-center gap-1.5">
               <span className="text-xs text-green-200">Players:</span>
-              <span className="text-sm font-bold text-white">👥 {players.length}/4</span>
+              <span className="text-sm font-bold text-white">
+                👥 {players.length}/4
+              </span>
             </div>
 
             {/* Your Role */}
             <div className="bg-purple-500/20 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-purple-400/30 flex items-center gap-1.5">
               <span className="text-xs text-purple-200">Role:</span>
               <span className="text-sm font-bold text-white">
-                {myRole ? getRoleIcon(myRole) : "❓"} {myRole ? myRole.toUpperCase() : "..."}
+                {cardRevealed && myRole ? getRoleIcon(myRole) : "❓"}{" "}
+                {cardRevealed && myRole ? myRole.toUpperCase() : "HIDDEN"}
               </span>
             </div>
           </div>
@@ -546,23 +553,34 @@ const Game = () => {
                           }`}
                         >
                           <div className="flex flex-col items-center gap-1">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${
-                              player.isBot ? "bg-green-500" : "bg-gradient-to-r from-amber-500 to-orange-500"
-                            }`}>
-                              {player.isBot ? "🤖" : player.username[0].toUpperCase()}
+                            <div
+                              className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${
+                                player.isBot
+                                  ? "bg-green-500"
+                                  : "bg-gradient-to-r from-amber-500 to-orange-500"
+                              }`}
+                            >
+                              {player.isBot
+                                ? "🤖"
+                                : player.username[0].toUpperCase()}
                             </div>
-                            <span className="text-xs truncate max-w-[80px]">{player.username}</span>
+                            <span className="text-xs truncate max-w-[80px]">
+                              {player.username}
+                            </span>
                           </div>
                         </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {Array.from({ length: room?.rounds || 5 }, (_, i) => i + 1).map((round) => {
+                    {Array.from(
+                      { length: room?.rounds || 5 },
+                      (_, i) => i + 1
+                    ).map((round) => {
                       const roundData = roundHistory[round];
                       const isCurrentRound = round === currentRound;
                       const isCompletedRound = round < currentRound;
-                      
+
                       return (
                         <motion.tr
                           key={round}
@@ -570,27 +588,39 @@ const Game = () => {
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: round * 0.05 }}
                           className={`border-b border-white/10 ${
-                            isCurrentRound ? "bg-green-500/10" : "hover:bg-white/5"
+                            isCurrentRound
+                              ? "bg-green-500/10"
+                              : "hover:bg-white/5"
                           }`}
                         >
                           <td className="p-3 sticky left-0 bg-blue-900/90 backdrop-blur-sm z-10">
                             <div className="flex items-center gap-2">
-                              {isCurrentRound && <span className="text-green-300">▶</span>}
-                              <span className={`font-bold ${
-                                isCurrentRound ? "text-green-300" : isCompletedRound ? "text-white" : "text-gray-500"
-                              }`}>
+                              {isCurrentRound && (
+                                <span className="text-green-300">▶</span>
+                              )}
+                              <span
+                                className={`font-bold ${
+                                  isCurrentRound
+                                    ? "text-green-300"
+                                    : isCompletedRound
+                                    ? "text-white"
+                                    : "text-gray-500"
+                                }`}
+                              >
                                 Round {round}
                               </span>
                             </div>
                           </td>
-                          
+
                           {players.map((player) => {
                             let roundScore = 0;
-                            
+
                             if (roundData && isCompletedRound) {
                               // Calculate score based on actual round result
-                              const oldScore = roundData.oldScores?.[player.id] || 0;
-                              const newScore = roundData.scores?.[player.id] || 0;
+                              const oldScore =
+                                roundData.oldScores?.[player.id] || 0;
+                              const newScore =
+                                roundData.scores?.[player.id] || 0;
                               roundScore = newScore - oldScore;
                             }
 
@@ -598,16 +628,27 @@ const Game = () => {
                               <td
                                 key={player.id}
                                 className={`p-3 text-center font-bold ${
-                                  player.id === socket?.id ? "bg-amber-500/10" : ""
+                                  player.id === socket?.id
+                                    ? "bg-amber-500/10"
+                                    : ""
                                 }`}
                               >
                                 {isCurrentRound ? (
-                                  <span className="text-yellow-300 text-xl">⏳</span>
+                                  <span className="text-yellow-300 text-xl">
+                                    ⏳
+                                  </span>
                                 ) : isCompletedRound ? (
-                                  <span className={`text-lg ${
-                                    roundScore > 0 ? "text-green-400" : roundScore < 0 ? "text-red-400" : "text-gray-400"
-                                  }`}>
-                                    {roundScore > 0 ? "+" : ""}{roundScore}
+                                  <span
+                                    className={`text-lg ${
+                                      roundScore > 0
+                                        ? "text-green-400"
+                                        : roundScore < 0
+                                        ? "text-red-400"
+                                        : "text-gray-400"
+                                    }`}
+                                  >
+                                    {roundScore > 0 ? "+" : ""}
+                                    {roundScore}
                                   </span>
                                 ) : (
                                   <span className="text-gray-600">-</span>
@@ -618,16 +659,21 @@ const Game = () => {
                         </motion.tr>
                       );
                     })}
-                    
+
                     {/* Total Row */}
                     <tr className="bg-amber-500/20 border-t-2 border-amber-400/50">
                       <td className="p-3 sticky left-0 bg-amber-600/30 backdrop-blur-sm z-10">
-                        <span className="font-black text-amber-300 text-lg">TOTAL</span>
+                        <span className="font-black text-amber-300 text-lg">
+                          TOTAL
+                        </span>
                       </td>
                       {players.map((player) => (
-                        <td key={player.id} className={`p-3 text-center ${
-                          player.id === socket?.id ? "bg-amber-500/30" : ""
-                        }`}>
+                        <td
+                          key={player.id}
+                          className={`p-3 text-center ${
+                            player.id === socket?.id ? "bg-amber-500/30" : ""
+                          }`}
+                        >
                           <span className="text-2xl font-black text-amber-300">
                             {scores[player.id] || 0}
                           </span>
@@ -662,648 +708,711 @@ const Game = () => {
       <div className="flex-1 overflow-hidden p-3">
         <div className="h-full max-w-7xl mx-auto">
           {/* Timer Banner - Mobile Optimized */}
-        <AnimatePresence>
-          {isTimerRunning && (
-            <motion.div
-              initial={{ opacity: 0, y: -50 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -50 }}
-              className="fixed top-2 sm:top-4 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md"
-            >
-              <div className="bg-gradient-to-r from-red-600 to-orange-500 rounded-full px-4 sm:px-8 py-3 sm:py-4 shadow-2xl border-2 border-white/20">
-                <div className="flex items-center justify-between sm:justify-center sm:space-x-4">
-                  <div className="text-white font-bold text-sm sm:text-lg">
-                    ⏰{" "}
-                    {window.innerWidth < 640 ? "Timer" : "Mantri Timer"}
-                  </div>
-                  <div
-                    className={`text-2xl sm:text-3xl font-black ${getTimerColor()} animate-pulse`}
-                  >
-                    {timer}s
-                  </div>
-                  <div className="w-12 sm:w-16 h-3 sm:h-4 bg-white/30 rounded-full overflow-hidden">
-                    <motion.div
-                      className={`h-full ${getTimerBgColor()} rounded-full`}
-                      initial={{ width: "100%" }}
-                      animate={{ width: `${(timer / 10) * 100}%` }}
-                      transition={{ duration: 1 }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Sipahi Timer Banner */}
-        <AnimatePresence>
-          {isSipahiTimerRunning && (
-            <motion.div
-              initial={{ opacity: 0, y: -50 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -50 }}
-              className="fixed top-2 sm:top-4 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md"
-            >
-              <div className="bg-gradient-to-r from-purple-600 to-blue-500 rounded-full px-4 sm:px-8 py-3 sm:py-4 shadow-2xl border-2 border-white/20">
-                <div className="flex items-center justify-between sm:justify-center sm:space-x-4">
-                  <div className="text-white font-bold text-sm sm:text-lg">
-                    ⏰{" "}
-                    {window.innerWidth < 640 ? "Timer" : "Sipahi Timer"}
-                  </div>
-                  <div
-                    className={`text-2xl sm:text-3xl font-black ${getSipahiTimerColor()} animate-pulse`}
-                  >
-                    {formatTime(sipahiTimer)}
-                  </div>
-                  <div className="w-12 sm:w-16 h-3 sm:h-4 bg-white/30 rounded-full overflow-hidden">
-                    <motion.div
-                      className={`h-full ${getSipahiTimerBgColor()} rounded-full`}
-                      initial={{ width: "100%" }}
-                      animate={{ width: `${(sipahiTimer / 120) * 100}%` }}
-                      transition={{ duration: 1 }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Winner Announcement - Beautiful */}
-        <AnimatePresence>
-          {showWinner && winner && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
-            >
+          <AnimatePresence>
+            {isTimerRunning && (
               <motion.div
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                exit={{ scale: 0, rotate: 180 }}
-                transition={{ duration: 0.8, type: "spring", bounce: 0.5 }}
-                className="bg-gradient-to-br from-yellow-600 via-amber-500 to-orange-600 rounded-3xl p-8 sm:p-12 max-w-2xl w-full border-4 border-yellow-300 shadow-2xl relative overflow-hidden"
+                initial={{ opacity: 0, y: -50 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -50 }}
+                className="fixed top-2 sm:top-4 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md"
               >
-                {/* Confetti Background Effect */}
-                <div className="absolute inset-0 opacity-20">
-                  {[...Array(20)].map((_, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ y: -100, x: Math.random() * 100 + "%", opacity: 1 }}
-                      animate={{ 
-                        y: "100vh", 
-                        rotate: Math.random() * 360,
-                        opacity: 0 
-                      }}
-                      transition={{ 
-                        duration: 2 + Math.random() * 2,
-                        delay: Math.random() * 1,
-                        repeat: Infinity 
-                      }}
-                      className="absolute w-3 h-3 bg-white rounded-full"
-                      style={{ left: Math.random() * 100 + "%" }}
-                    />
-                  ))}
-                </div>
-
-                <div className="text-center relative z-10">
-                  {/* Trophy Animation */}
-                  <motion.div
-                    initial={{ scale: 0, y: -50 }}
-                    animate={{ scale: 1, y: 0 }}
-                    transition={{ delay: 0.3, type: "spring" }}
-                    className="text-8xl sm:text-9xl mb-4"
-                  >
-                    🏆
-                  </motion.div>
-
-                  {/* Winner Title */}
-                  <motion.h1
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className="text-4xl sm:text-6xl font-black text-white mb-6 drop-shadow-lg"
-                  >
-                    WINNER!
-                  </motion.h1>
-
-                  {/* Winner Card */}
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.7 }}
-                    className="bg-white/20 backdrop-blur-md rounded-2xl p-6 mb-6 border-2 border-white/50"
-                  >
-                    <div className="flex flex-col items-center gap-4">
-                      <div className={`w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold border-4 border-white shadow-xl ${
-                        winner.isBot ? "bg-green-500" : "bg-gradient-to-r from-purple-600 to-pink-600"
-                      }`}>
-                        {winner.isBot ? "🤖" : winner.username[0].toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="text-3xl sm:text-4xl font-black text-white mb-2">
-                          {winner.username}
-                        </p>
-                        <p className="text-xl sm:text-2xl font-bold text-yellow-200">
-                          {scores[winner.id] || 0} Points
-                        </p>
-                      </div>
+                <div className="bg-gradient-to-r from-red-600 to-orange-500 rounded-full px-4 sm:px-8 py-3 sm:py-4 shadow-2xl border-2 border-white/20">
+                  <div className="flex items-center justify-between sm:justify-center sm:space-x-4">
+                    <div className="text-white font-bold text-sm sm:text-lg">
+                      ⏰ {window.innerWidth < 640 ? "Timer" : "Mantri Timer"}
                     </div>
-                  </motion.div>
+                    <div
+                      className={`text-2xl sm:text-3xl font-black ${getTimerColor()} animate-pulse`}
+                    >
+                      {timer}s
+                    </div>
+                    <div className="w-12 sm:w-16 h-3 sm:h-4 bg-white/30 rounded-full overflow-hidden">
+                      <motion.div
+                        className={`h-full ${getTimerBgColor()} rounded-full`}
+                        initial={{ width: "100%" }}
+                        animate={{ width: `${(timer / 10) * 100}%` }}
+                        transition={{ duration: 1 }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-                  {/* Other Players */}
+          {/* Sipahi Timer Banner */}
+          <AnimatePresence>
+            {isSipahiTimerRunning && (
+              <motion.div
+                initial={{ opacity: 0, y: -50 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -50 }}
+                className="fixed top-2 sm:top-4 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md"
+              >
+                <div className="bg-gradient-to-r from-purple-600 to-blue-500 rounded-full px-4 sm:px-8 py-3 sm:py-4 shadow-2xl border-2 border-white/20">
+                  <div className="flex items-center justify-between sm:justify-center sm:space-x-4">
+                    <div className="text-white font-bold text-sm sm:text-lg">
+                      ⏰ {window.innerWidth < 640 ? "Timer" : "Sipahi Timer"}
+                    </div>
+                    <div
+                      className={`text-2xl sm:text-3xl font-black ${getSipahiTimerColor()} animate-pulse`}
+                    >
+                      {formatTime(sipahiTimer)}
+                    </div>
+                    <div className="w-12 sm:w-16 h-3 sm:h-4 bg-white/30 rounded-full overflow-hidden">
+                      <motion.div
+                        className={`h-full ${getSipahiTimerBgColor()} rounded-full`}
+                        initial={{ width: "100%" }}
+                        animate={{ width: `${(sipahiTimer / 120) * 100}%` }}
+                        transition={{ duration: 1 }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Winner Announcement - Beautiful */}
+          <AnimatePresence>
+            {showWinner && winner && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+              >
+                <motion.div
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  exit={{ scale: 0, rotate: 180 }}
+                  transition={{ duration: 0.8, type: "spring", bounce: 0.5 }}
+                  className="bg-gradient-to-br from-yellow-600 via-amber-500 to-orange-600 rounded-3xl p-8 sm:p-12 max-w-2xl w-full border-4 border-yellow-300 shadow-2xl relative overflow-hidden"
+                >
+                  {/* Confetti Background Effect */}
+                  <div className="absolute inset-0 opacity-20">
+                    {[...Array(20)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{
+                          y: -100,
+                          x: Math.random() * 100 + "%",
+                          opacity: 1,
+                        }}
+                        animate={{
+                          y: "100vh",
+                          rotate: Math.random() * 360,
+                          opacity: 0,
+                        }}
+                        transition={{
+                          duration: 2 + Math.random() * 2,
+                          delay: Math.random() * 1,
+                          repeat: Infinity,
+                        }}
+                        className="absolute w-3 h-3 bg-white rounded-full"
+                        style={{ left: Math.random() * 100 + "%" }}
+                      />
+                    ))}
+                  </div>
+
+                  <div className="text-center relative z-10">
+                    {/* Trophy Animation */}
+                    <motion.div
+                      initial={{ scale: 0, y: -50 }}
+                      animate={{ scale: 1, y: 0 }}
+                      transition={{ delay: 0.3, type: "spring" }}
+                      className="text-8xl sm:text-9xl mb-4"
+                    >
+                      🏆
+                    </motion.div>
+
+                    {/* Winner Title */}
+                    <motion.h1
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5 }}
+                      className="text-4xl sm:text-6xl font-black text-white mb-6 drop-shadow-lg"
+                    >
+                      WINNER!
+                    </motion.h1>
+
+                    {/* Winner Card */}
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.7 }}
+                      className="bg-white/20 backdrop-blur-md rounded-2xl p-6 mb-6 border-2 border-white/50"
+                    >
+                      <div className="flex flex-col items-center gap-4">
+                        <div
+                          className={`w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold border-4 border-white shadow-xl ${
+                            winner.isBot
+                              ? "bg-green-500"
+                              : "bg-gradient-to-r from-purple-600 to-pink-600"
+                          }`}
+                        >
+                          {winner.isBot
+                            ? "🤖"
+                            : winner.username[0].toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-3xl sm:text-4xl font-black text-white mb-2">
+                            {winner.username}
+                          </p>
+                          <p className="text-xl sm:text-2xl font-bold text-yellow-200">
+                            {scores[winner.id] || 0} Points
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    {/* Other Players */}
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.9 }}
+                      className="space-y-2"
+                    >
+                      {players
+                        .filter((p) => p.id !== winner.id)
+                        .sort(
+                          (a, b) => (scores[b.id] || 0) - (scores[a.id] || 0)
+                        )
+                        .map((player, index) => (
+                          <motion.div
+                            key={player.id}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 1 + index * 0.1 }}
+                            className="bg-white/10 backdrop-blur-sm rounded-lg p-3 flex items-center justify-between"
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="text-white font-bold">
+                                #{index + 2}
+                              </span>
+                              <div
+                                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                                  player.isBot
+                                    ? "bg-green-500"
+                                    : "bg-gradient-to-r from-blue-500 to-purple-500"
+                                }`}
+                              >
+                                {player.isBot
+                                  ? "🤖"
+                                  : player.username[0].toUpperCase()}
+                              </div>
+                              <span className="text-white font-bold">
+                                {player.username}
+                              </span>
+                            </div>
+                            <span className="text-yellow-200 font-bold text-lg">
+                              {scores[player.id] || 0}
+                            </span>
+                          </motion.div>
+                        ))}
+                    </motion.div>
+
+                    {/* Play Again Button */}
+                    <motion.button
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 1.5 }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => (window.location.href = "/")}
+                      className="mt-8 bg-white text-amber-600 px-8 py-4 rounded-full font-black text-xl shadow-xl hover:bg-yellow-100 transition-all"
+                    >
+                      🏠 Back to Home
+                    </motion.button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Score Popup Animation - Mobile Optimized */}
+          <AnimatePresence>
+            {showRoundResult && roundResult && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-2 sm:p-4"
+              >
+                <motion.div
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.5, opacity: 0 }}
+                  transition={{ duration: 0.5, type: "spring" }}
+                  className="bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 rounded-3xl p-6 sm:p-8 w-full max-w-lg border-4 border-amber-400 shadow-2xl mx-2"
+                >
+                  <div className="text-center">
+                    {/* Animated Title */}
+                    <motion.h2
+                      initial={{ y: -20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                      className="text-3xl sm:text-4xl font-black text-amber-300 mb-6"
+                    >
+                      Round {currentRound} Complete! 🎉
+                    </motion.h2>
+
+                    {/* Score Cards with Animation */}
+                    <div className="space-y-3 mb-6">
+                      {players
+                        .sort((a, b) => {
+                          const aChange =
+                            (roundResult.scores?.[a.id] || 0) -
+                            (roundResult.oldScores?.[a.id] || 0);
+                          const bChange =
+                            (roundResult.scores?.[b.id] || 0) -
+                            (roundResult.oldScores?.[b.id] || 0);
+                          return bChange - aChange;
+                        })
+                        .map((player, index) => {
+                          const scoreChange =
+                            (roundResult.scores?.[player.id] || 0) -
+                            (roundResult.oldScores?.[player.id] || 0);
+
+                          return (
+                            <motion.div
+                              key={player.id}
+                              initial={{ x: -100, opacity: 0 }}
+                              animate={{ x: 0, opacity: 1 }}
+                              transition={{ delay: 0.3 + index * 0.1 }}
+                              className={`bg-white/10 backdrop-blur-sm rounded-xl p-4 border-2 ${
+                                player.id === socket?.id
+                                  ? "border-amber-400 bg-amber-500/20"
+                                  : "border-white/20"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div
+                                    className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
+                                      player.isBot
+                                        ? "bg-green-500"
+                                        : "bg-gradient-to-r from-amber-500 to-orange-500"
+                                    }`}
+                                  >
+                                    {player.isBot
+                                      ? "🤖"
+                                      : player.username[0].toUpperCase()}
+                                  </div>
+                                  <div className="text-left">
+                                    <p className="font-bold text-white text-lg">
+                                      {player.username}
+                                    </p>
+                                    {player.revealed && (
+                                      <p className="text-xs text-amber-300">
+                                        {player.role.toUpperCase()}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <motion.p
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    transition={{
+                                      delay: 0.5 + index * 0.1,
+                                      type: "spring",
+                                    }}
+                                    className={`text-2xl font-black ${
+                                      scoreChange > 0
+                                        ? "text-green-400"
+                                        : scoreChange < 0
+                                        ? "text-red-400"
+                                        : "text-gray-400"
+                                    }`}
+                                  >
+                                    {scoreChange > 0 ? "+" : ""}
+                                    {scoreChange}
+                                  </motion.p>
+                                  <p className="text-xs text-white/70">
+                                    Total:{" "}
+                                    {roundResult.scores?.[player.id] || 0}
+                                  </p>
+                                </div>
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                    </div>
+
+                    {/* Next Round Message */}
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.8 }}
+                      className="text-amber-200 text-sm"
+                    >
+                      {currentRound < (room?.rounds || 5)
+                        ? "Next round starting soon..."
+                        : "Calculating final results..."}
+                    </motion.div>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+            {/* Left Column - Game Area */}
+            <div className="lg:col-span-2">
+              {/* Game Content - Mobile Optimized */}
+              <div className="text-center">
+                {gameState === "role-assignment" && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.9 }}
-                    className="space-y-2"
+                    className="bg-gradient-to-br from-blue-800 to-purple-900 rounded-2xl p-4 sm:p-6 md:p-8 border border-blue-600/50 shadow-2xl"
                   >
-                    {players
-                      .filter(p => p.id !== winner.id)
-                      .sort((a, b) => (scores[b.id] || 0) - (scores[a.id] || 0))
-                      .map((player, index) => (
+                    {/* Countdown Animation */}
+                    {countdown !== null && (
+                      <motion.div
+                        key={countdown}
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 2, opacity: 0 }}
+                        className="mb-6"
+                      >
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-amber-300 mb-4">
+                          Round {currentRound} Starts In
+                        </h2>
                         <motion.div
-                          key={player.id}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 1 + index * 0.1 }}
-                          className="bg-white/10 backdrop-blur-sm rounded-lg p-3 flex items-center justify-between"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: [0, 1.2, 1] }}
+                          transition={{ duration: 0.5 }}
+                          className="text-6xl sm:text-8xl md:text-9xl font-black text-white"
                         >
-                          <div className="flex items-center gap-3">
-                            <span className="text-white font-bold">#{index + 2}</span>
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                              player.isBot ? "bg-green-500" : "bg-gradient-to-r from-blue-500 to-purple-500"
-                            }`}>
-                              {player.isBot ? "🤖" : player.username[0].toUpperCase()}
-                            </div>
-                            <span className="text-white font-bold">{player.username}</span>
-                          </div>
-                          <span className="text-yellow-200 font-bold text-lg">
-                            {scores[player.id] || 0}
-                          </span>
+                          {countdown > 0 ? countdown : "GO!"}
                         </motion.div>
-                      ))}
-                  </motion.div>
-
-                  {/* Play Again Button */}
-                  <motion.button
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1.5 }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => window.location.href = "/"}
-                    className="mt-8 bg-white text-amber-600 px-8 py-4 rounded-full font-black text-xl shadow-xl hover:bg-yellow-100 transition-all"
-                  >
-                    🏠 Back to Home
-                  </motion.button>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Score Popup Animation - Mobile Optimized */}
-        <AnimatePresence>
-          {showRoundResult && roundResult && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-2 sm:p-4"
-            >
-              <motion.div
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.5, opacity: 0 }}
-                transition={{ duration: 0.5, type: "spring" }}
-                className="bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 rounded-3xl p-6 sm:p-8 w-full max-w-lg border-4 border-amber-400 shadow-2xl mx-2"
-              >
-                <div className="text-center">
-                  {/* Animated Title */}
-                  <motion.h2
-                    initial={{ y: -20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                    className="text-3xl sm:text-4xl font-black text-amber-300 mb-6"
-                  >
-                    Round {currentRound} Complete! 🎉
-                  </motion.h2>
-
-                  {/* Score Cards with Animation */}
-                  <div className="space-y-3 mb-6">
-                    {players
-                      .sort((a, b) => {
-                        const aChange = (roundResult.scores?.[a.id] || 0) - (roundResult.oldScores?.[a.id] || 0);
-                        const bChange = (roundResult.scores?.[b.id] || 0) - (roundResult.oldScores?.[b.id] || 0);
-                        return bChange - aChange;
-                      })
-                      .map((player, index) => {
-                        const scoreChange = (roundResult.scores?.[player.id] || 0) - (roundResult.oldScores?.[player.id] || 0);
-                        
-                        return (
-                          <motion.div
-                            key={player.id}
-                            initial={{ x: -100, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            transition={{ delay: 0.3 + index * 0.1 }}
-                            className={`bg-white/10 backdrop-blur-sm rounded-xl p-4 border-2 ${
-                              player.id === socket?.id
-                                ? "border-amber-400 bg-amber-500/20"
-                                : "border-white/20"
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
-                                  player.isBot ? "bg-green-500" : "bg-gradient-to-r from-amber-500 to-orange-500"
-                                }`}>
-                                  {player.isBot ? "🤖" : player.username[0].toUpperCase()}
-                                </div>
-                                <div className="text-left">
-                                  <p className="font-bold text-white text-lg">
-                                    {player.username}
-                                  </p>
-                                  <p className="text-xs text-amber-300">
-                                    {player.role.toUpperCase()}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <motion.p
-                                  initial={{ scale: 0 }}
-                                  animate={{ scale: 1 }}
-                                  transition={{ delay: 0.5 + index * 0.1, type: "spring" }}
-                                  className={`text-2xl font-black ${
-                                    scoreChange > 0 ? "text-green-400" : scoreChange < 0 ? "text-red-400" : "text-gray-400"
-                                  }`}
-                                >
-                                  {scoreChange > 0 ? "+" : ""}{scoreChange}
-                                </motion.p>
-                                <p className="text-xs text-white/70">
-                                  Total: {roundResult.scores?.[player.id] || 0}
-                                </p>
-                              </div>
-                            </div>
-                          </motion.div>
-                        );
-                      })}
-                  </div>
-
-                  {/* Next Round Message */}
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.8 }}
-                    className="text-amber-200 text-sm"
-                  >
-                    {currentRound < (room?.rounds || 5) ? "Next round starting soon..." : "Calculating final results..."}
-                  </motion.div>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          {/* Left Column - Game Area */}
-          <div
-            className={`lg:col-span-2 ${
-              isChatOpen ? "hidden lg:block" : "block"
-            }`}
-          >
-            {/* Game Content - Mobile Optimized */}
-            <div className="text-center">
-              {gameState === "role-assignment" && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="bg-gradient-to-br from-blue-800 to-purple-900 rounded-2xl p-4 sm:p-6 md:p-8 border border-blue-600/50 shadow-2xl"
-                >
-                  {/* Countdown Animation */}
-                  {countdown !== null && (
-                    <motion.div
-                      key={countdown}
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 2, opacity: 0 }}
-                      className="mb-6"
-                    >
-                      <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-amber-300 mb-4">
-                        Round {currentRound} Starts In
-                      </h2>
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: [0, 1.2, 1] }}
-                        transition={{ duration: 0.5 }}
-                        className="text-6xl sm:text-8xl md:text-9xl font-black text-white"
-                      >
-                        {countdown > 0 ? countdown : "GO!"}
                       </motion.div>
-                    </motion.div>
-                  )}
+                    )}
 
-                  {/* Card Flying and Shuffle Animation */}
-                  {showCardAnimation && (
-                    <div className="mb-8 relative h-64 sm:h-80">
-                      <motion.div
-                        initial={{ y: -200, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        className="absolute inset-0 flex items-center justify-center"
-                      >
-                        {/* Multiple flying cards */}
-                        {[...Array(5)].map((_, i) => (
-                          <motion.img
-                            key={i}
-                            src="/card-back.png"
-                            alt="Card"
-                            initial={{ 
-                              y: -300, 
-                              x: (i - 2) * 50,
-                              rotate: Math.random() * 360,
-                              opacity: 0 
-                            }}
-                            animate={{ 
-                              y: [null, 50, 0],
-                              x: [(i - 2) * 50, (i - 2) * 30, (i - 2) * 20],
-                              rotate: [null, (i - 2) * 15, 0],
-                              opacity: [0, 1, 0.8]
-                            }}
-                            transition={{ 
-                              duration: 1.5,
-                              delay: i * 0.1,
-                              times: [0, 0.5, 1]
-                            }}
-                            className="absolute w-24 sm:w-32 h-auto"
-                            style={{ zIndex: i }}
-                          />
-                        ))}
-                      </motion.div>
-                      
-                      {/* Shuffle effect */}
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: [0, 1.2, 1], rotate: [0, 360, 0] }}
-                        transition={{ duration: 1.5, delay: 0.8 }}
-                        className="absolute inset-0 flex items-center justify-center"
-                      >
-                        <div className="text-4xl sm:text-6xl text-amber-300 font-bold">
-                          Shuffling...
-                        </div>
-                      </motion.div>
-                    </div>
-                  )}
-
-                  {/* Card Reveal Section */}
-                  {!countdown && !showCardAnimation && (
-                    <>
-                      <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-amber-300 mb-3 sm:mb-4">
-                        Reveal Your Role! 🎴
-                      </h2>
-                      <p className="text-blue-200 mb-4 sm:mb-6 text-sm sm:text-base md:text-lg">
-                        Click your card to reveal your role
-                      </p>
-
-                      {/* Card with flip animation */}
-                      <div className="flex justify-center mb-6 sm:mb-8 perspective-1000">
+                    {/* Card Flying and Shuffle Animation */}
+                    {showCardAnimation && (
+                      <div className="mb-8 relative h-64 sm:h-80">
                         <motion.div
-                          className="relative w-48 h-72 sm:w-56 sm:h-80 cursor-pointer"
-                          style={{ transformStyle: "preserve-3d" }}
-                          animate={{ rotateY: cardRevealed ? 180 : 0 }}
-                          transition={{ duration: 0.6 }}
-                          onClick={!cardRevealed ? handleRevealRole : undefined}
-                          whileHover={!cardRevealed ? { scale: 1.05 } : {}}
-                          whileTap={!cardRevealed ? { scale: 0.95 } : {}}
+                          initial={{ y: -200, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          className="absolute inset-0 flex items-center justify-center"
                         >
-                          {/* Card Back */}
-                          <motion.div
-                            className="absolute inset-0 backface-hidden"
-                            style={{ backfaceVisibility: "hidden" }}
-                          >
-                            <img
+                          {/* Multiple flying cards */}
+                          {[...Array(5)].map((_, i) => (
+                            <motion.img
+                              key={i}
                               src="/card-back.png"
-                              alt="Card Back"
-                              className="w-full h-full object-cover rounded-2xl shadow-2xl border-4 border-amber-400/50"
+                              alt="Card"
+                              initial={{
+                                y: -300,
+                                x: (i - 2) * 50,
+                                rotate: Math.random() * 360,
+                                opacity: 0,
+                              }}
+                              animate={{
+                                y: [null, 50, 0],
+                                x: [(i - 2) * 50, (i - 2) * 30, (i - 2) * 20],
+                                rotate: [null, (i - 2) * 15, 0],
+                                opacity: [0, 1, 0.8],
+                              }}
+                              transition={{
+                                duration: 1.5,
+                                delay: i * 0.1,
+                                times: [0, 0.5, 1],
+                              }}
+                              className="absolute w-24 sm:w-32 h-auto"
+                              style={{ zIndex: i }}
                             />
-                            {!cardRevealed && (
-                              <motion.div
-                                animate={{ scale: [1, 1.1, 1] }}
-                                transition={{ duration: 1.5, repeat: Infinity }}
-                                className="absolute inset-0 flex items-center justify-center"
-                              >
-                                <div className="bg-black/50 backdrop-blur-sm px-4 py-2 rounded-full text-white font-bold">
-                                  Click to Reveal
-                                </div>
-                              </motion.div>
-                            )}
-                          </motion.div>
+                          ))}
+                        </motion.div>
 
-                          {/* Card Front - Role Card */}
-                          <motion.div
-                            className="absolute inset-0 backface-hidden"
-                            style={{ 
-                              backfaceVisibility: "hidden",
-                              transform: "rotateY(180deg)"
-                            }}
-                          >
-                            <img
-                              src={getRoleCardImage(myRole)}
-                              alt={myRole}
-                              className="w-full h-full object-cover rounded-2xl shadow-2xl border-4 border-amber-400"
-                            />
-                          </motion.div>
+                        {/* Shuffle effect */}
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: [0, 1.2, 1], rotate: [0, 360, 0] }}
+                          transition={{ duration: 1.5, delay: 0.8 }}
+                          className="absolute inset-0 flex items-center justify-center"
+                        >
+                          <div className="text-4xl sm:text-6xl text-amber-300 font-bold">
+                            Shuffling...
+                          </div>
                         </motion.div>
                       </div>
+                    )}
 
-                      <div className="mt-4 sm:mt-6 text-blue-200">
-                        <p className="text-sm sm:text-base md:text-lg">
-                          Waiting for {players.filter((p) => !p.revealed).length}{" "}
-                          player
-                          {players.filter((p) => !p.revealed).length !== 1
-                            ? "s"
-                            : ""}
-                          ...
+                    {/* Card Reveal Section */}
+                    {!countdown && !showCardAnimation && (
+                      <>
+                        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-amber-300 mb-3 sm:mb-4">
+                          Reveal Your Role! 🎴
+                        </h2>
+                        <p className="text-blue-200 mb-4 sm:mb-6 text-sm sm:text-base md:text-lg">
+                          Click your card to reveal your role
                         </p>
-                      </div>
-                    </>
-                  )}
-                </motion.div>
-              )}
 
-              {gameState === "guessing" && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="bg-gradient-to-br from-blue-800 to-purple-900 rounded-2xl p-4 sm:p-6 md:p-8 border border-blue-600/50 shadow-2xl"
-                >
-                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-amber-300 mb-3 sm:mb-4">
-                    Mantri's Turn! 💼
-                  </h2>
-                  <p className="text-blue-200 text-sm sm:text-base md:text-lg mb-4 sm:mb-6">
-                    The Minister will call the Soldier to catch the Thief...
-                  </p>
-
-                  {isMantri() ? (
-                    <div className="mt-4 sm:mt-6">
-                      <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-amber-300 mb-4 sm:mb-6">
-                        You are the{" "}
-                        <span className="text-yellow-400">MANTRI</span>!
-                      </h3>
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={handleMantriCallSipahi}
-                        className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white py-4 px-8 rounded-xl font-bold text-lg sm:text-xl shadow-2xl transition-all duration-200 border-2 border-amber-400"
-                      >
-                        📢 Call: "Sipahi Sipahi Chor ko pakdo!"
-                      </motion.button>
-                      {isTimerRunning && (
-                        <div className="mt-4 sm:mt-6 text-yellow-300 text-sm sm:text-base md:text-lg">
-                          ⏰ Time: <span className="font-bold">{timer}s</span>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="mt-4 sm:mt-6">
-                      <p className="text-amber-300 text-base sm:text-xl">
-                        Waiting for{" "}
-                        <strong className="text-yellow-400">
-                          {players.find((p) => p.role === "mantri")?.username}
-                        </strong>{" "}
-                        to call...
-                      </p>
-                      {players.find((p) => p.role === "mantri")?.isBot && (
-                        <p className="text-green-300 mt-2 text-sm sm:text-base">
-                          🤖 AI is thinking...
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </motion.div>
-              )}
-
-              {gameState === "sipahi-guessing" && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="bg-gradient-to-br from-blue-800 to-purple-900 rounded-2xl p-4 sm:p-6 md:p-8 border border-blue-600/50 shadow-2xl"
-                >
-                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-amber-300 mb-3 sm:mb-4">
-                    Sipahi's Turn! ⚔️
-                  </h2>
-                  <p className="text-blue-200 text-sm sm:text-base md:text-lg mb-4 sm:mb-6">
-                    The Soldier must identify the Thief!
-                  </p>
-
-                  {isSipahi() ? (
-                    <div className="mt-4 sm:mt-6">
-                      <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-amber-300 mb-4 sm:mb-6">
-                        You are the{" "}
-                        <span className="text-red-400">SIPAHI</span>! Choose the CHOR:
-                      </h3>
-                      <div className="grid grid-cols-1 gap-3 sm:gap-4 max-w-2xl mx-auto">
-                        {players
-                          .filter(
-                            (player) =>
-                              player.role === "raja" || player.role === "chor"
-                          )
-                          .map((player) => (
-                            <motion.button
-                              key={player.id}
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => handleSipahiGuess(player.id)}
-                              className="bg-gradient-to-r from-red-600 to-pink-700 hover:from-red-700 hover:to-pink-800 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-bold text-base sm:text-lg shadow-lg transition-all duration-200 border-2 border-red-500/50"
+                        {/* Card with flip animation */}
+                        <div className="flex justify-center mb-6 sm:mb-8 perspective-1000">
+                          <motion.div
+                            className="relative w-48 h-72 sm:w-56 sm:h-80 cursor-pointer"
+                            style={{ transformStyle: "preserve-3d" }}
+                            animate={{ rotateY: cardRevealed ? 180 : 0 }}
+                            transition={{ duration: 0.6 }}
+                            onClick={
+                              !cardRevealed ? handleRevealRole : undefined
+                            }
+                            whileHover={!cardRevealed ? { scale: 1.05 } : {}}
+                            whileTap={!cardRevealed ? { scale: 0.95 } : {}}
+                          >
+                            {/* Card Back */}
+                            <motion.div
+                              className="absolute inset-0 backface-hidden"
+                              style={{ backfaceVisibility: "hidden" }}
                             >
-                              <div className="flex items-center justify-center space-x-2 sm:space-x-3">
-                                <span className="text-xl sm:text-2xl">🕵️</span>
-                                <span className="truncate">
-                                  {player.username}
-                                </span>
-                                {player.isBot && (
-                                  <span className="text-green-300">🤖</span>
-                                )}
-                              </div>
-                            </motion.button>
-                          ))}
-                      </div>
-                      {isSipahiTimerRunning && (
-                        <div className="mt-4 sm:mt-6 text-yellow-300 text-sm sm:text-base md:text-lg">
-                          ⏰ Time: <span className="font-bold">{formatTime(sipahiTimer)}</span>
+                              <img
+                                src="/card-back.png"
+                                alt="Card Back"
+                                className="w-full h-full object-cover rounded-2xl shadow-2xl border-4 border-amber-400/50"
+                              />
+                              {!cardRevealed && (
+                                <motion.div
+                                  animate={{ scale: [1, 1.1, 1] }}
+                                  transition={{
+                                    duration: 1.5,
+                                    repeat: Infinity,
+                                  }}
+                                  className="absolute inset-0 flex items-center justify-center"
+                                >
+                                  <div className="bg-black/50 backdrop-blur-sm px-4 py-2 rounded-full text-white font-bold">
+                                    Click to Reveal
+                                  </div>
+                                </motion.div>
+                              )}
+                            </motion.div>
+
+                            {/* Card Front - Role Card */}
+                            <motion.div
+                              className="absolute inset-0 backface-hidden"
+                              style={{
+                                backfaceVisibility: "hidden",
+                                transform: "rotateY(180deg)",
+                              }}
+                            >
+                              <img
+                                src={getRoleCardImage(myRole)}
+                                alt={myRole}
+                                className="w-full h-full object-cover rounded-2xl shadow-2xl border-4 border-amber-400"
+                              />
+                            </motion.div>
+                          </motion.div>
                         </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="mt-4 sm:mt-6">
-                      <p className="text-amber-300 text-base sm:text-xl">
-                        Waiting for{" "}
-                        <strong className="text-red-400">
-                          {players.find((p) => p.role === "sipahi")?.username}
-                        </strong>{" "}
-                        to choose...
-                      </p>
-                      {players.find((p) => p.role === "sipahi")?.isBot && (
-                        <p className="text-green-300 mt-2 text-sm sm:text-base">
-                          🤖 AI is thinking...
+
+                        <div className="mt-4 sm:mt-6 text-blue-200">
+                          <p className="text-sm sm:text-base md:text-lg">
+                            Waiting for{" "}
+                            {players.filter((p) => !p.revealed).length} player
+                            {players.filter((p) => !p.revealed).length !== 1
+                              ? "s"
+                              : ""}
+                            ...
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </motion.div>
+                )}
+
+                {gameState === "guessing" && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="bg-gradient-to-br from-blue-800 to-purple-900 rounded-2xl p-4 sm:p-6 md:p-8 border border-blue-600/50 shadow-2xl"
+                  >
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-amber-300 mb-3 sm:mb-4">
+                      Mantri's Turn! 💼
+                    </h2>
+                    <p className="text-blue-200 text-sm sm:text-base md:text-lg mb-4 sm:mb-6">
+                      The Minister will call the Soldier to catch the Thief...
+                    </p>
+
+                    {isMantri() ? (
+                      <div className="mt-4 sm:mt-6">
+                        <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-amber-300 mb-4 sm:mb-6">
+                          You are the{" "}
+                          <span className="text-yellow-400">MANTRI</span>!
+                        </h3>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={handleMantriCallSipahi}
+                          className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white py-4 px-8 rounded-xl font-bold text-lg sm:text-xl shadow-2xl transition-all duration-200 border-2 border-amber-400"
+                        >
+                          📢 Call: "Sipahi Sipahi Chor ko pakdo!"
+                        </motion.button>
+                        {isTimerRunning && (
+                          <div className="mt-4 sm:mt-6 text-yellow-300 text-sm sm:text-base md:text-lg">
+                            ⏰ Time: <span className="font-bold">{timer}s</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="mt-4 sm:mt-6">
+                        <p className="text-amber-300 text-base sm:text-xl">
+                          Waiting for{" "}
+                          <strong className="text-yellow-400">
+                            {players.find((p) => p.role === "mantri")?.username}
+                          </strong>{" "}
+                          to call...
                         </p>
-                      )}
+                        {players.find((p) => p.role === "mantri")?.isBot && (
+                          <p className="text-green-300 mt-2 text-sm sm:text-base">
+                            🤖 AI is thinking...
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+
+                {gameState === "sipahi-guessing" && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="bg-gradient-to-br from-blue-800 to-purple-900 rounded-2xl p-4 sm:p-6 md:p-8 border border-blue-600/50 shadow-2xl"
+                  >
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-amber-300 mb-3 sm:mb-4">
+                      Sipahi's Turn! ⚔️
+                    </h2>
+                    <p className="text-blue-200 text-sm sm:text-base md:text-lg mb-4 sm:mb-6">
+                      The Soldier must identify the Thief!
+                    </p>
+
+                    {isSipahi() ? (
+                      <div className="mt-4 sm:mt-6">
+                        <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-amber-300 mb-4 sm:mb-6">
+                          You are the{" "}
+                          <span className="text-red-400">SIPAHI</span>! Choose
+                          the CHOR:
+                        </h3>
+                        <div className="grid grid-cols-1 gap-3 sm:gap-4 max-w-2xl mx-auto">
+                          {players
+                            .filter(
+                              (player) =>
+                                player.role === "raja" || player.role === "chor"
+                            )
+                            .map((player) => (
+                              <motion.button
+                                key={player.id}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleSipahiGuess(player.id)}
+                                className="bg-gradient-to-r from-red-600 to-pink-700 hover:from-red-700 hover:to-pink-800 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-xl font-bold text-base sm:text-lg shadow-lg transition-all duration-200 border-2 border-red-500/50"
+                              >
+                                <div className="flex items-center justify-center space-x-2 sm:space-x-3">
+                                  <span className="text-xl sm:text-2xl">
+                                    🕵️
+                                  </span>
+                                  <span className="truncate">
+                                    {player.username}
+                                  </span>
+                                  {player.isBot && (
+                                    <span className="text-green-300">🤖</span>
+                                  )}
+                                </div>
+                              </motion.button>
+                            ))}
+                        </div>
+                        {isSipahiTimerRunning && (
+                          <div className="mt-4 sm:mt-6 text-yellow-300 text-sm sm:text-base md:text-lg">
+                            ⏰ Time:{" "}
+                            <span className="font-bold">
+                              {formatTime(sipahiTimer)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="mt-4 sm:mt-6">
+                        <p className="text-amber-300 text-base sm:text-xl">
+                          Waiting for{" "}
+                          <strong className="text-red-400">
+                            {players.find((p) => p.role === "sipahi")?.username}
+                          </strong>{" "}
+                          to choose...
+                        </p>
+                        {players.find((p) => p.role === "sipahi")?.isBot && (
+                          <p className="text-green-300 mt-2 text-sm sm:text-base">
+                            🤖 AI is thinking...
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+
+                {gameState === "concluding-scores" && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="bg-gradient-to-br from-blue-800 to-purple-900 rounded-2xl p-4 sm:p-6 md:p-8 border border-blue-600/50 shadow-2xl"
+                  >
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-amber-300 mb-3 sm:mb-4">
+                      Calculating Scores... 🎲
+                    </h2>
+                    <p className="text-blue-200 text-sm sm:text-base md:text-lg">
+                      Results coming soon...
+                    </p>
+                    <div className="mt-4 sm:mt-6">
+                      <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-amber-500 mx-auto"></div>
                     </div>
-                  )}
-                </motion.div>
-              )}
+                  </motion.div>
+                )}
 
-              {gameState === "concluding-scores" && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="bg-gradient-to-br from-blue-800 to-purple-900 rounded-2xl p-4 sm:p-6 md:p-8 border border-blue-600/50 shadow-2xl"
-                >
-                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-amber-300 mb-3 sm:mb-4">
-                    Calculating Scores... 🎲
-                  </h2>
-                  <p className="text-blue-200 text-sm sm:text-base md:text-lg">
-                    Results coming soon...
-                  </p>
-                  <div className="mt-4 sm:mt-6">
-                    <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-amber-500 mx-auto"></div>
-                  </div>
-                </motion.div>
-              )}
+                {gameState === "round-result" && !showRoundResult && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="bg-gradient-to-br from-blue-800 to-purple-900 rounded-2xl p-4 sm:p-6 md:p-8 border border-blue-600/50 shadow-2xl"
+                  >
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-amber-300 mb-3 sm:mb-4">
+                      Round Complete! 🎉
+                    </h2>
+                    <p className="text-blue-200 text-sm sm:text-base md:text-lg">
+                      Preparing for next round...
+                    </p>
+                    <div className="mt-4 sm:mt-6">
+                      <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-amber-500 mx-auto"></div>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+            </div>
 
-              {gameState === "round-result" && !showRoundResult && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="bg-gradient-to-br from-blue-800 to-purple-900 rounded-2xl p-4 sm:p-6 md:p-8 border border-blue-600/50 shadow-2xl"
-                >
-                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-amber-300 mb-3 sm:mb-4">
-                    Round Complete! 🎉
-                  </h2>
-                  <p className="text-blue-200 text-sm sm:text-base md:text-lg">
-                    Preparing for next round...
-                  </p>
-                  <div className="mt-4 sm:mt-6">
-                    <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-amber-500 mx-auto"></div>
-                  </div>
-                </motion.div>
-              )}
+            {/* Right Column - Chat - Mobile Optimized */}
+            <div
+              className={`lg:col-span-1 ${
+                isChatOpen
+                  ? "fixed inset-0 z-50 bg-black/50 p-4 lg:static lg:bg-transparent lg:p-0"
+                  : "hidden lg:block"
+              }`}
+              onClick={(e) => {
+                // Close chat overlay when clicking the backdrop on mobile
+                if (isChatOpen && e.target === e.currentTarget) {
+                  setIsChatOpen(false);
+                }
+              }}
+            >
+              <div className={`${isChatOpen ? "h-full" : ""}`}>
+                <Chat
+                  roomCode={roomCode}
+                  currentUsername={currentUsername}
+                  onClose={() => setIsChatOpen(false)}
+                  isOpenFromParent={isChatOpen}
+                />
+              </div>
             </div>
           </div>
-
-          {/* Right Column - Chat - Mobile Optimized */}
-          <div
-            className={`lg:col-span-1 ${
-              isChatOpen
-                ? "fixed inset-0 z-50 bg-black/50 p-4 lg:static lg:bg-transparent lg:p-0"
-                : "hidden lg:block"
-            }`}
-          >
-            <div className={`${isChatOpen ? "h-full" : ""}`}>
-              <Chat roomCode={roomCode} currentUsername={currentUsername} />
-            </div>
-          </div>
-        </div>
         </div>
       </div>
     </div>

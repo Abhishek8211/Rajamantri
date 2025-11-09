@@ -2,12 +2,19 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSocket } from "../contexts/SocketContext";
 
-const Chat = ({ roomCode, currentUsername }) => {
+const Chat = ({ roomCode, currentUsername, onClose, isOpenFromParent }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [isOpen, setIsOpen] = useState(true);
   const messagesEndRef = useRef(null);
   const { socket } = useSocket();
+
+  // Auto-expand when parent opens the chat
+  useEffect(() => {
+    if (isOpenFromParent) {
+      setIsOpen(true);
+    }
+  }, [isOpenFromParent]);
 
   const emojis = [
     "😂",
@@ -143,11 +150,24 @@ const Chat = ({ roomCode, currentUsername }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-2xl h-[500px] sm:h-[600px] lg:h-[calc(100vh-10rem)] flex flex-col overflow-hidden">
+    <div
+      className={`bg-white rounded-xl shadow-2xl ${
+        isOpen ? "h-[500px] sm:h-[600px] lg:h-[calc(100vh-10rem)]" : "h-auto"
+      } flex flex-col overflow-hidden transition-all duration-300`}
+    >
       {/* Chat Header - Fixed */}
       <div
-        className="bg-gradient-to-r from-amber-500 to-amber-600 text-white p-3 sm:p-4 rounded-t-xl cursor-pointer flex justify-between items-center shadow-md flex-shrink-0"
-        onClick={() => setIsOpen(!isOpen)}
+        className={`bg-gradient-to-r from-amber-500 to-amber-600 text-white p-3 sm:p-4 ${
+          isOpen ? "rounded-t-xl" : "rounded-xl"
+        } cursor-pointer flex justify-between items-center shadow-md flex-shrink-0`}
+        onClick={() => {
+          const newIsOpen = !isOpen;
+          setIsOpen(newIsOpen);
+          // On mobile, when minimizing the chat, close the overlay
+          if (!newIsOpen && onClose && window.innerWidth < 1024) {
+            onClose();
+          }
+        }}
       >
         <div className="flex items-center space-x-2">
           <h3 className="font-bold text-base sm:text-lg">💬 Game Chat</h3>
