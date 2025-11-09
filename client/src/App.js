@@ -4,6 +4,8 @@ import { SocketProvider } from './contexts/SocketContext';
 import Home from './pages/Home';
 import Lobby from './pages/Lobby';
 import Game from './pages/Game';
+import GameAnimated from './pages/GameAnimated';
+import AnimationShowcase from './pages/AnimationShowcase';
 import './index.css';
 
 function App() {
@@ -15,6 +17,8 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/lobby/:roomCode" element={<Lobby />} />
             <Route path="/game/:roomCode" element={<Game />} />
+            <Route path="/game-animated/:roomCode" element={<GameAnimated />} />
+            <Route path="/showcase" element={<AnimationShowcase />} />
           </Routes>
         </div>
       </Router>
