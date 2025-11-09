@@ -890,7 +890,7 @@ We welcome contributions! Here's how:
 
 **License**: MIT License
 
-**Developed by**: [Abhishek8211](https://github.com/Abhishek8211)
+**Developed by**: [Abhishek8211](https://github.com/Abhishek8211) && [netxspider](https://github.com/netxspider)
 
 **Game Design**: Traditional Indian game adaptation
 
@@ -902,7 +902,7 @@ We welcome contributions! Here's how:
 
 - **GitHub Issues**: [Report bugs](https://github.com/Abhishek8211/Rajamantri/issues)
 - **Discussions**: [Ask questions](https://github.com/Abhishek8211/Rajamantri/discussions)
-- **Email**: abhishek8211@example.com
+- **Email**: abhishekkr7133@gmail.com || netxspider@gmail.com
 
 ---
 
@@ -922,7 +922,7 @@ cd Rajamantri
 
 <div align="center">
 
-Made with ❤️ by Abhishek8211
+Made with ❤️ by netxspider & Abhishek8211
 
 ⭐ **Star this repo if you enjoyed it!** ⭐
 
