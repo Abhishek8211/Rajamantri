@@ -107,21 +107,45 @@ function botRevealRole(room, botPlayer) {
   }, delay);
 }
 
-// Bot makes intelligent guess
-function botMakeGuess(room, mantriBot) {
+// Bot makes intelligent call to Sipahi
+function botCallSipahi(room, mantriBot) {
+  const thinkingTime = 2000 + (Math.random() * 3000); // 2-5 seconds
+  
+  setTimeout(() => {
+    // Send bot thinking message
+    const thinkingMessage = {
+      id: Date.now().toString(),
+      username: 'System',
+      message: `${mantriBot.username} is thinking... 🤔`,
+      type: 'system',
+      timestamp: new Date().toLocaleTimeString(),
+      playerId: 'system'
+    };
+    room.chatMessages.push(thinkingMessage);
+    io.to(room.code).emit('new-chat-message', thinkingMessage);
+
+    // Small delay before calling Sipahi
+    setTimeout(() => {
+      mantriCallSipahi(room, mantriBot);
+    }, 1500);
+  }, thinkingTime);
+}
+
+// Bot Sipahi makes intelligent guess
+function botSipahiGuess(room, sipahiBot) {
   const thinkingTime = 2000 + (Math.random() * 5000); // 2-7 seconds
   
   setTimeout(() => {
     const chor = room.players.find(p => p.role === 'chor');
     const possibleTargets = room.players.filter(p => 
-      p.role !== 'mantri' && p.role !== 'raja' && p.id !== mantriBot.id
+      p.role === 'raja' || p.role === 'chor'
     );
     
     let guessedPlayerId;
     let guessAccuracy;
 
     // Different strategies based on bot personality
-    switch (mantriBot.personality) {
+    switch (sipahiBot.personality) {
       case BOT_PERSONALITIES.SMART:
         guessAccuracy = 0.7; // 70% accurate
         break;
@@ -137,13 +161,8 @@ function botMakeGuess(room, mantriBot) {
 
     const shouldGuessCorrectly = Math.random() < guessAccuracy;
     
-    if (shouldGuessCorrectly && chor && !chor.isBot) {
-      // Smart guess - target the actual chor if it's a human
+    if (shouldGuessCorrectly && chor) {
       guessedPlayerId = chor.id;
-    } else if (shouldGuessCorrectly && chor && chor.isBot) {
-      // If chor is bot, sometimes guess correctly based on personality
-      const botVsBotAccuracy = Math.random() < 0.6; // 60% accuracy bot vs bot
-      guessedPlayerId = botVsBotAccuracy ? chor.id : getRandomTarget(possibleTargets);
     } else {
       // Random guess
       guessedPlayerId = getRandomTarget(possibleTargets);
@@ -161,7 +180,7 @@ function botMakeGuess(room, mantriBot) {
       const thinkingMessage = {
         id: Date.now().toString(),
         username: 'System',
-        message: `${mantriBot.username} is thinking carefully... 🤔`,
+        message: `${sipahiBot.username} is analyzing... 🤔`,
         type: 'system',
         timestamp: new Date().toLocaleTimeString(),
         playerId: 'system'
@@ -171,22 +190,7 @@ function botMakeGuess(room, mantriBot) {
 
       // Small delay before actual guess
       setTimeout(() => {
-        const guessMessage = {
-          id: Date.now().toString(),
-          username: 'System',
-          message: `${mantriBot.username} (Mantri) thinks ${guessedPlayer.username} is the Chor!`,
-          type: 'system',
-          timestamp: new Date().toLocaleTimeString(),
-          playerId: 'system'
-        };
-        room.chatMessages.push(guessMessage);
-        io.to(room.code).emit('new-chat-message', guessMessage);
-        
-        processGuess(room, guessedPlayerId);
-        io.to(room.code).emit('guess-processed', room);
-        
-        // Move to next round
-        scheduleNextRound(room);
+        sipahiGuess(room, sipahiBot, guessedPlayerId);
       }, 1500);
     }
   }, thinkingTime);
@@ -452,7 +456,7 @@ io.on('connection', (socket) => {
           const systemMessage = {
             id: Date.now().toString(),
             username: 'System',
-            message: `All roles revealed! ${mantri.username} (Mantri), find the Chor!`,
+            message: `All roles revealed! ${mantri.username} (Mantri), call the Sipahi!`,
             type: 'system',
             timestamp: new Date().toLocaleTimeString(),
             playerId: 'system'
@@ -462,40 +466,56 @@ io.on('connection', (socket) => {
           
           io.to(roomCode).emit('all-roles-revealed', room);
           
-          // If Mantri is bot, auto-guess
+          // If Mantri is bot, auto-call Sipahi
           if (mantri.isBot) {
-            botMakeGuess(room, mantri);
+            botCallSipahi(room, mantri);
           }
         }
       }
     }
   });
 
-  // Mantri guesses the Chor
-  socket.on('mantri-guess', (roomCode, guessedPlayerId) => {
+  // Mantri calls Sipahi
+  socket.on('mantri-call-sipahi', (roomCode) => {
+    console.log('🔔 Server received mantri-call-sipahi event');
+    console.log('Room code:', roomCode);
+    console.log('Socket ID:', socket.id);
+    
     const room = rooms.get(roomCode);
-    if (room && room.gameState === 'guessing') {
-      const mantri = room.players.find(p => p.role === 'mantri');
-      if (mantri && mantri.id === socket.id) {
-        const guessedPlayer = room.players.find(p => p.id === guessedPlayerId);
-        
-        // Send system message about the guess
-        const guessMessage = {
-          id: Date.now().toString(),
-          username: 'System',
-          message: `${mantri.username} (Mantri) thinks ${guessedPlayer.username} is the Chor!`,
-          type: 'system',
-          timestamp: new Date().toLocaleTimeString(),
-          playerId: 'system'
-        };
-        room.chatMessages.push(guessMessage);
-        io.to(roomCode).emit('new-chat-message', guessMessage);
-        
-        processGuess(room, guessedPlayerId);
-        io.to(roomCode).emit('guess-processed', room);
-        
-        // Move to next round after a delay
-        scheduleNextRound(room);
+    console.log('Room found:', !!room);
+    
+    if (!room) {
+      console.error('❌ Room not found!');
+      return;
+    }
+    
+    console.log('Room game state:', room.gameState);
+    
+    if (room.gameState !== 'guessing') {
+      console.error('❌ Wrong game state! Expected "guessing", got:', room.gameState);
+      return;
+    }
+    
+    const mantri = room.players.find(p => p.role === 'mantri');
+    console.log('Mantri found:', !!mantri);
+    console.log('Mantri ID:', mantri?.id);
+    console.log('Socket ID matches:', mantri?.id === socket.id);
+    
+    if (mantri && mantri.id === socket.id) {
+      console.log('✅ Calling mantriCallSipahi function');
+      mantriCallSipahi(room, mantri);
+    } else {
+      console.error('❌ Mantri validation failed!');
+    }
+  });
+
+  // Sipahi guesses the Chor
+  socket.on('sipahi-guess', (roomCode, guessedPlayerId) => {
+    const room = rooms.get(roomCode);
+    if (room && room.gameState === 'sipahi-guessing') {
+      const sipahi = room.players.find(p => p.role === 'sipahi');
+      if (sipahi && sipahi.id === socket.id) {
+        sipahiGuess(room, sipahi, guessedPlayerId);
       }
     }
   });
@@ -644,7 +664,75 @@ function startNewRound(room) {
   console.log(`🎭 Roles: ${room.players.map(p => `${p.username}: ${p.role}`).join(', ')}`);
 }
 
-// UPDATED processGuess function with oldScores for comparison
+// Mantri calls Sipahi
+function mantriCallSipahi(room, mantri) {
+  room.gameState = 'sipahi-guessing';
+  
+  const sipahi = room.players.find(p => p.role === 'sipahi');
+  
+  // Send system message
+  const callMessage = {
+    id: Date.now().toString(),
+    username: mantri.username,
+    message: `calls "Sipahi Sipahi Chor ko pakdo!"`,
+    type: 'mantri-call',
+    timestamp: new Date().toLocaleTimeString(),
+    playerId: mantri.id,
+    highlighted: true
+  };
+  room.chatMessages.push(callMessage);
+  io.to(room.code).emit('new-chat-message', callMessage);
+  
+  // System message for Sipahi assignment
+  const sipahiMessage = {
+    id: (Date.now() + 1).toString(),
+    username: 'System',
+    message: `Sipahi is ${sipahi.username}`,
+    type: 'system',
+    timestamp: new Date().toLocaleTimeString(),
+    playerId: 'system',
+    highlighted: true
+  };
+  room.chatMessages.push(sipahiMessage);
+  io.to(room.code).emit('new-chat-message', sipahiMessage);
+  
+  io.to(room.code).emit('mantri-called-sipahi', { mantriId: mantri.id, sipahiId: sipahi.id });
+  
+  // If Sipahi is bot, auto-guess
+  if (sipahi.isBot) {
+    botSipahiGuess(room, sipahi);
+  }
+}
+
+// Sipahi makes a guess
+function sipahiGuess(room, sipahi, guessedPlayerId) {
+  const guessedPlayer = room.players.find(p => p.id === guessedPlayerId);
+  
+  // Send system message about Sipahi's selection
+  const guessMessage = {
+    id: Date.now().toString(),
+    username: 'System',
+    message: `Sipahi selected ${guessedPlayer.username} as Chor`,
+    type: 'system',
+    timestamp: new Date().toLocaleTimeString(),
+    playerId: 'system'
+  };
+  room.chatMessages.push(guessMessage);
+  io.to(room.code).emit('new-chat-message', guessMessage);
+  
+  io.to(room.code).emit('sipahi-guessed', { sipahiId: sipahi.id, guessedPlayerId });
+  
+  // Wait 5 seconds before processing result
+  setTimeout(() => {
+    processGuess(room, guessedPlayerId);
+    io.to(room.code).emit('guess-processed', room);
+    
+    // Move to next round
+    scheduleNextRound(room);
+  }, 5000);
+}
+
+// UPDATED processGuess function with new scoring system
 function processGuess(room, guessedPlayerId) {
   const chor = room.players.find(p => p.role === 'chor');
   const mantri = room.players.find(p => p.role === 'mantri');
@@ -656,27 +744,25 @@ function processGuess(room, guessedPlayerId) {
   // Store old scores for comparison
   const oldScores = { ...room.scores };
 
-  // Calculate scores
+  // Calculate scores based on new rules
+  // Raja always gets 1000
+  room.scores[raja.id] += 1000;
+  raja.score += 1000;
+  
+  // Mantri always gets 800
+  room.scores[mantri.id] += 800;
+  mantri.score += 800;
+  
   if (isCorrect) {
-    room.scores[mantri.id] += 800;
-    room.scores[raja.id] += 1000;
+    // Sipahi guessed correctly
     room.scores[sipahi.id] += 500;
     room.scores[chor.id] += 0;
-    
-    // Update player objects
-    mantri.score += 800;
-    raja.score += 1000;
     sipahi.score += 500;
   } else {
-    room.scores[mantri.id] += 0;
-    room.scores[raja.id] += 1000;
-    room.scores[chor.id] += 1200; // Chor gets bonus if not caught
-    room.scores[sipahi.id] += 500;
-    
-    // Update player objects
-    raja.score += 1000;
-    chor.score += 1200;
-    sipahi.score += 500;
+    // Sipahi guessed wrong
+    room.scores[sipahi.id] += 0;
+    room.scores[chor.id] += 500;
+    chor.score += 500;
   }
 
   room.roundResult = {
@@ -693,9 +779,11 @@ function processGuess(room, guessedPlayerId) {
   const guessedPlayer = room.players.find(p => p.id === guessedPlayerId);
   let resultMessage;
   if (isCorrect) {
-    resultMessage = `Correct! ${guessedPlayer.username} was the Chor! 🎯`;
+    resultMessage = `Correct! ${guessedPlayer.username} was the Chor! 🎯\n` +
+                   `Raja: +1000, Mantri: +800, Sipahi: +500, Chor: 0`;
   } else {
-    resultMessage = `Wrong! ${guessedPlayer.username} was not the Chor. The real Chor was ${chor.username}!`;
+    resultMessage = `Wrong! ${guessedPlayer.username} was not the Chor. The real Chor was ${chor.username}!\n` +
+                   `Raja: +1000, Mantri: +800, Sipahi: 0, Chor: +500`;
   }
   
   const systemMessage = {
@@ -753,7 +841,7 @@ app.get('/rooms', (req, res) => {
 });
 
 // Start server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 server.listen(PORT, () => {
   console.log(`🎯 Server running on http://localhost:${PORT}`);
   console.log(`📊 API endpoints available:`);
