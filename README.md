@@ -922,7 +922,7 @@ cd Rajamantri
 
 <div align="center">
 
-Made with ❤️ by Abhishek8211
+Made with ❤️ by netxspider & Abhishek8211
 
 ⭐ **Star this repo if you enjoyed it!** ⭐
 
