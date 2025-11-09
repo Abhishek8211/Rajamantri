@@ -115,134 +115,109 @@ const Lobby = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+        <div className="bg-white/10 backdrop-blur-md border-2 border-white/20 rounded-xl shadow-2xl p-6 max-w-md w-full text-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-400 mx-auto mb-3"></div>
+          <h2 className="text-lg font-bold text-white mb-2">
             Loading Room...
           </h2>
-          <p className="text-gray-600">Connecting to room: {roomCode}</p>
-          <p className="text-sm text-gray-500 mt-2">
-            Socket: {socket?.id ? "Connected" : "Connecting..."}
-          </p>
+          <p className="text-white/80 text-sm">Room: {roomCode}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-3">
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full"
+        className="bg-white/10 backdrop-blur-md border-2 border-white/20 rounded-xl shadow-2xl p-4 sm:p-5 max-w-4xl w-full"
       >
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Game Lobby</h1>
-          <div className="flex items-center justify-center space-x-2">
-            <p className="text-gray-600">Room Code:</p>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={copyRoomCode}
-              className="bg-amber-100 text-amber-800 px-4 py-2 rounded-lg font-mono font-bold text-lg"
-            >
-              {roomCode}
-            </motion.button>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center">
+              <span className="text-xl">👑</span>
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black text-white">Game Lobby</h1>
+              {room && (
+                <p className="text-white/70 text-xs">
+                  {room.rounds} Rounds • {humanPlayers.length} Human{humanPlayers.length !== 1 ? "s" : ""} • {plannedBotCount} AI
+                </p>
+              )}
+            </div>
           </div>
-          {room && (
-            <p className="text-gray-600 mt-2">
-              Rounds: {room.rounds} • {humanPlayers.length} Human
-              {humanPlayers.length !== 1 ? "s" : ""} • {plannedBotCount} AI{" "}
-              {plannedBotCount > 0 && actualBotCount === 0
-                ? "(will join on start)"
-                : ""}
-            </p>
-          )}
-          {/* Debug info */}
-          <div className="mt-2 text-xs text-gray-500 bg-gray-100 p-2 rounded">
-            <p>
-              Socket: {socket?.id ? `Connected (${socket.id})` : "Disconnected"}
-            </p>
-            <p>
-              Players visible: {players.length} (Humans: {humanPlayers.length},
-              Bots: {actualBotCount})
-            </p>
-            <p>
-              Planned Bots: {plannedBotCount}{" "}
-              {room?.addBots
-                ? `(${room?.botDifficulty || "smart"})`
-                : "(disabled)"}
-            </p>
-            <p>Your ID: {socket?.id}</p>
-          </div>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={copyRoomCode}
+            className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-lg font-mono font-bold text-sm sm:text-base shadow-lg"
+          >
+            📋 {roomCode}
+          </motion.button>
         </div>
 
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-700 mb-4">
-            Players ({players.length}/4)
-          </h2>
+        {/* Players Section */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-bold text-white flex items-center gap-2">
+              <span>👥</span> Players ({players.length}/4)
+            </h2>
+            {plannedBotCount > 0 && (
+              <span className="text-xs text-blue-300 bg-blue-500/20 px-2 py-1 rounded-full">
+                +{plannedBotCount} AI on start
+              </span>
+            )}
+          </div>
 
           {players.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto mb-4"></div>
-              <p className="text-gray-500">Waiting for players to join...</p>
+            <div className="text-center py-6 bg-white/5 rounded-lg">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-400 mx-auto mb-2"></div>
+              <p className="text-white/70 text-sm">Waiting for players...</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
               {players.map((player, index) => (
                 <motion.div
                   key={player.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className={`bg-gray-50 rounded-lg p-4 flex items-center space-x-3 border-2 ${
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className={`bg-white/10 backdrop-blur-sm rounded-lg p-3 border-2 ${
                     player.id === socket?.id
-                      ? "border-amber-400 bg-amber-50"
-                      : "border-gray-200"
-                  } ${player.isBot ? "border-blue-300 bg-blue-50" : ""}`}
+                      ? "border-amber-400 bg-amber-500/20"
+                      : player.isBot
+                      ? "border-blue-400 bg-blue-500/20"
+                      : "border-white/30"
+                  }`}
                 >
-                  <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold text-lg ${
-                      player.isBot ? "bg-blue-500" : "bg-amber-500"
-                    }`}
-                  >
-                    {player.username[0].toUpperCase()}
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-800">
-                      {player.username}
-                      {player.id === socket?.id && (
-                        <span className="text-amber-600 ml-2">(You)</span>
-                      )}
-                      {player.isBot && (
-                        <span className="text-blue-600 ml-2">🤖 AI</span>
-                      )}
-                    </p>
-                    <div className="flex space-x-2 mt-1">
-                      {player.isHost && (
-                        <span className="text-xs bg-amber-500 text-white px-2 py-1 rounded-full">
-                          Host
-                        </span>
-                      )}
-                      {player.isBot && (
-                        <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded-full">
-                          AI Player
-                        </span>
-                      )}
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full ${
-                          player.connected
-                            ? "bg-green-500 text-white"
-                            : "bg-red-500 text-white"
-                        }`}
-                      >
-                        {player.connected ? "Online" : "Offline"}
-                      </span>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
+                        player.isBot ? "bg-blue-500" : "bg-gradient-to-r from-amber-500 to-orange-500"
+                      }`}
+                    >
+                      {player.isBot ? "🤖" : player.username[0].toUpperCase()}
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      ID: {player.id.substring(0, 8)}...
-                    </p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-white text-sm truncate">
+                        {player.username}
+                      </p>
+                      <div className="flex gap-1 flex-wrap">
+                        {player.isHost && (
+                          <span className="text-xs bg-amber-500 text-white px-1.5 py-0.5 rounded">
+                            👑 Host
+                          </span>
+                        )}
+                        {player.id === socket?.id && (
+                          <span className="text-xs bg-green-500 text-white px-1.5 py-0.5 rounded">
+                            You
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </motion.div>
               ))}
@@ -250,59 +225,46 @@ const Lobby = () => {
           )}
         </div>
 
-        <div className="text-center">
+        {/* Action Section */}
+        <div className="space-y-2">
           {isHost ? (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleStartGame}
-              disabled={humanPlayers.length < 2}
-              className="bg-green-600 text-white py-3 px-8 rounded-lg font-semibold text-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Start Game ({humanPlayers.length}/4 humans)
-            </motion.button>
+            <>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleStartGame}
+                disabled={humanPlayers.length < 2}
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 px-6 rounded-lg font-black text-base hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed border-2 border-green-300"
+              >
+                <span className="flex items-center justify-center gap-2">
+                  <span>🚀</span>
+                  Start Game ({humanPlayers.length} Human{humanPlayers.length !== 1 ? "s" : ""})
+                </span>
+              </motion.button>
+              {humanPlayers.length < 2 && (
+                <p className="text-red-300 text-xs text-center">
+                  ⚠️ Need at least 2 human players to start
+                </p>
+              )}
+            </>
           ) : (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="bg-blue-100 text-blue-800 py-3 px-6 rounded-lg"
+              className="bg-blue-500/20 backdrop-blur-sm border border-blue-400/30 text-white py-3 px-4 rounded-lg text-center"
             >
-              <p className="font-semibold">
-                Waiting for host to start the game...
-              </p>
-              <p className="text-sm mt-1">
-                Host: {players.find((p) => p.isHost)?.username}
+              <p className="font-bold text-sm">
+                ⏳ Waiting for {players.find((p) => p.isHost)?.username} to start...
               </p>
             </motion.div>
           )}
 
-          {humanPlayers.length < 2 && (
-            <p className="text-red-500 text-sm mt-2">
-              Need at least 2 human players to start
+          {/* Info Banner */}
+          <div className="bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg p-2 text-center">
+            <p className="text-white/80 text-xs">
+              💡 Share room code <span className="font-bold text-amber-300">{roomCode}</span> with friends!
             </p>
-          )}
-        </div>
-
-        <div className="mt-8 text-center text-sm text-gray-500">
-          <p>Share the room code with your friends to invite them!</p>
-          {plannedBotCount > 0 ? (
-            <p className="mt-1 text-blue-600 font-semibold">
-              🤖 {plannedBotCount} AI player{plannedBotCount !== 1 ? "s" : ""}{" "}
-              will join automatically when the game starts
-            </p>
-          ) : (
-            <p className="mt-1">No AI players configured for this game</p>
-          )}
-        </div>
-
-        {/* Debug controls */}
-        <div className="mt-6 text-center">
-          <button
-            onClick={() => socket.emit("request-room-update", roomCode)}
-            className="text-xs bg-gray-200 text-gray-700 px-3 py-1 rounded"
-          >
-            Refresh Room Data
-          </button>
+          </div>
         </div>
       </motion.div>
     </div>
