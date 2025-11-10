@@ -29,34 +29,35 @@ Play with friends in real-time, reveal your secret roles, and use strategy to wi
 
 ### 🃏 The Four Roles
 
-| Role | Icon | Description | Strategy |
-|------|------|-------------|----------|
-| **Raja** (King) | 👑 | The ruler who trusts the Mantri | Stay calm, trust your Mantri's judgment |
-| **Mantri** (Minister) | 💼 | Advisor who calls the Sipahi to find the Chor | Call the Sipahi quickly, observe player behavior |
-| **Sipahi** (Soldier) | ⚔️ | Enforcer who must identify the Chor | Analyze carefully, you have 2 minutes to decide |
-| **Chor** (Thief) | 🕵️ | The criminal trying to avoid capture | Act innocent, blend in with other players |
+| Role                  | Icon | Description                                   | Strategy                                         |
+| --------------------- | ---- | --------------------------------------------- | ------------------------------------------------ |
+| **Raja** (King)       | 👑   | The ruler who trusts the Mantri               | Stay calm, trust your Mantri's judgment          |
+| **Mantri** (Minister) | 💼   | Advisor who calls the Sipahi to find the Chor | Call the Sipahi quickly, observe player behavior |
+| **Sipahi** (Soldier)  | ⚔️   | Enforcer who must identify the Chor           | Analyze carefully, you have 2 minutes to decide  |
+| **Chor** (Thief)      | 🕵️   | The criminal trying to avoid capture          | Act innocent, blend in with other players        |
 
 ### 🏆 Scoring System
 
 **Fixed Points (Every Round):**
+
 - **👑 Raja**: Always **1000 points** (guaranteed income)
 - **💼 Mantri**: Always **800 points** (trusted advisor)
 
 **Variable Points (Based on Sipahi's Choice):**
 
-| Scenario | Sipahi | Chor | Outcome |
-|----------|--------|------|---------|
-| **Sipahi Correct** | +500 | 0 | ✅ Chor caught |
-| **Sipahi Wrong** | 0 | +500 | ❌ Chor escapes |
+| Scenario           | Sipahi | Chor | Outcome         |
+| ------------------ | ------ | ---- | --------------- |
+| **Sipahi Correct** | +500   | 0    | ✅ Chor caught  |
+| **Sipahi Wrong**   | 0      | +500 | ❌ Chor escapes |
 
 **Example Game (3 Rounds):**
 
-| Round | Player A | Player B | Player C | Player D |
-|-------|----------|----------|----------|----------|
-| **1** | Raja → 1000 | Mantri → 800 | Sipahi → 500 ✅ | Chor → 0 |
-| **2** | Chor → 500 ✅ | Sipahi → 0 ❌ | Mantri → 800 | Raja → 1000 |
-| **3** | Mantri → 800 | Chor → 0 | Raja → 1000 | Sipahi → 500 ✅ |
-| **Total** | **2300** 🥈 | **1600** | **2300** 🥈 | **2500** 🏆 |
+| Round     | Player A      | Player B      | Player C        | Player D        |
+| --------- | ------------- | ------------- | --------------- | --------------- |
+| **1**     | Raja → 1000   | Mantri → 800  | Sipahi → 500 ✅ | Chor → 0        |
+| **2**     | Chor → 500 ✅ | Sipahi → 0 ❌ | Mantri → 800    | Raja → 1000     |
+| **3**     | Mantri → 800  | Chor → 0      | Raja → 1000     | Sipahi → 500 ✅ |
+| **Total** | **2300** 🥈   | **1600**      | **2300** 🥈     | **2500** 🏆     |
 
 ---
 
@@ -71,26 +72,33 @@ Play with friends in real-time, reveal your secret roles, and use strategy to wi
 ### 🚀 Installation
 
 **1. Clone the Repository**
+
 ```bash
 git clone https://github.com/Abhishek8211/Rajamantri.git
 cd Rajamantri
 ```
 
 **2. Start the Server**
+
 ```bash
 cd server
 npm install
 npm start
 ```
+
 ✅ Server running on `http://localhost:5001`
 
-**3. Start the Client** *(in a new terminal)*
+**3. Start the Client** _(in a new terminal)_
+
 ```bash
 cd client
 npm install
 npm start
 ```
-✅ Client running on `http://localhost:3000`
+
+✅ Client running on `http://localhost:3000` (or 3002 if 3000 is busy)
+
+**Note:** If port 3000 is already in use, React will prompt you to use an alternate port. Type `Y` to accept port 3002 or any available port.
 
 ### 🎮 First Game
 
@@ -107,6 +115,7 @@ npm start
 ## ✨ Key Features
 
 ### 🎮 Core Gameplay
+
 - ✅ **Multiplayer Rooms** - Create/join with unique codes
 - ✅ **4-Player Support** - Exactly 4 players per game
 - ✅ **Real-time Sync** - Powered by Socket.io
@@ -117,22 +126,32 @@ npm start
 - ✅ **Timer System** - 10s for Mantri, 2min for Sipahi
 
 ### 🎨 Visual Experience
+
+- ✅ **Animation Showcase** - Dedicated page to view all animations
+- ✅ **4-Stage Role Reveal** - Cards flying → Shuffle → Flip → Details (7s sequence)
 - ✅ **3D Card Animations** - Smooth flip with CSS transforms
 - ✅ **Card Flying Effect** - Cards toss in air
 - ✅ **Shuffle Animation** - Dramatic 360° rotation
 - ✅ **Countdown Timer** - 3-2-1-GO! before rounds
 - ✅ **Score Popups** - Animated reveals with spring physics
 - ✅ **Winner Celebration** - Confetti and trophy
+- ✅ **Custom Scrollbar** - Amber-colored smooth scrolling
 - ✅ **Mobile Responsive** - Optimized for all screens
 - ✅ **Dark Theme** - Beautiful gradients
 
 ### 💬 Social Features
-- ✅ **Live Chat** - Real-time messaging
+
+- ✅ **Live Chat** - Real-time messaging with scrollable layout
+- ✅ **Auto-expand Chat** - Opens automatically when message icon clicked
+- ✅ **Mobile Chat Overlay** - Full-screen chat on mobile devices
+- ✅ **Backdrop Dismiss** - Click outside to close mobile chat
+- ✅ **Dynamic Layout** - Chat minimizes to header-only on collapse
 - ✅ **Emoji Reactions** - Quick emotional responses
 - ✅ **System Messages** - Game events announced
 - ✅ **Player Status** - See who's online/revealed
 
 ### 📊 Scoring & Analytics
+
 - ✅ **Dynamic Scoreboard** - Round-by-round tracking
 - ✅ **Score History** - View all rounds in modal
 - ✅ **Leaderboard** - Real-time rankings
@@ -140,6 +159,7 @@ npm start
 - ✅ **Winner Announcement** - Beautiful end-game ceremony
 
 ### 🤖 AI System
+
 - ✅ **SMART** (70% accuracy) - Challenges experienced players
 - ✅ **RANDOM** (25% accuracy) - Unpredictable behavior
 - ✅ **NOVICE** (10% accuracy) - Great for beginners
@@ -152,23 +172,26 @@ npm start
 ## 🛠️ Technology Stack
 
 ### Frontend
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **React.js** | 19.2.0 | UI framework with hooks |
-| **Framer Motion** | 12.23.24 | Animation library |
-| **Tailwind CSS** | 3.x | Utility-first styling |
-| **Socket.io-client** | 4.8.1 | Real-time connection |
-| **React Router** | 7.1.1 | Client-side routing |
+
+| Technology           | Version  | Purpose                 |
+| -------------------- | -------- | ----------------------- |
+| **React.js**         | 19.2.0   | UI framework with hooks |
+| **Framer Motion**    | 12.23.24 | Animation library       |
+| **Tailwind CSS**     | 3.x      | Utility-first styling   |
+| **Socket.io-client** | 4.8.1    | Real-time connection    |
+| **React Router**     | 7.1.1    | Client-side routing     |
 
 ### Backend
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **Node.js** | 18+ | JavaScript runtime |
-| **Express.js** | 4.21.2 | Web server framework |
-| **Socket.io** | 4.8.1 | WebSocket server |
-| **CORS** | 2.8.5 | Cross-origin sharing |
+
+| Technology     | Version | Purpose              |
+| -------------- | ------- | -------------------- |
+| **Node.js**    | 18+     | JavaScript runtime   |
+| **Express.js** | 4.21.2  | Web server framework |
+| **Socket.io**  | 4.8.1   | WebSocket server     |
+| **CORS**       | 2.8.5   | Cross-origin sharing |
 
 ### Key Libraries
+
 - **CSS Transforms** - 3D card flips (rotateY, perspective)
 - **AnimatePresence** - Enter/exit animations
 - **Motion Variants** - Reusable animation patterns
@@ -191,12 +214,17 @@ Rajamantri/
 │   │   └── manifest.json           # PWA manifest
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── Chat.js             # Real-time chat component
-│   │   │   └── RoleCard.js         # Role display component
+│   │   │   ├── Chat.js             # Real-time chat with scrollable layout
+│   │   │   ├── RoleRevealAnimation.js  # 4-stage cinematic reveal
+│   │   │   ├── AnimatedCard.js     # 3D flipping role cards
+│   │   │   ├── CardDeck.js         # Card distribution animation
+│   │   │   └── ScorePopup.js       # Animated score announcements
 │   │   ├── pages/
 │   │   │   ├── Home.js             # Landing page (create/join)
 │   │   │   ├── Lobby.js            # Pre-game waiting room
-│   │   │   └── Game.js             # Main game interface ⭐
+│   │   │   ├── Game.js             # Original game interface
+│   │   │   ├── GameAnimated.js     # Enhanced game with animations ⭐
+│   │   │   └── AnimationShowcase.js # Animation testing page
 │   │   ├── contexts/
 │   │   │   └── SocketContext.js    # Socket.io React context
 │   │   ├── App.js                  # Main app router
@@ -218,11 +246,12 @@ Rajamantri/
 
 ### 🌐 Application Routes
 
-| Route | Page | Description | Access |
-|-------|------|-------------|--------|
-| `/` | Home | Create/join room | Public |
-| `/lobby/:roomCode` | Lobby | Wait for players | Members |
-| `/game/:roomCode` | Game | Active gameplay | Members |
+| Route              | Page              | Description                     | Access  |
+| ------------------ | ----------------- | ------------------------------- | ------- |
+| `/`                | Home              | Create/join room                | Public  |
+| `/lobby/:roomCode` | Lobby             | Wait for players                | Members |
+| `/game/:roomCode`  | GameAnimated      | Active gameplay with animations | Members |
+| `/showcase`        | AnimationShowcase | Test all animations             | Public  |
 
 ---
 
@@ -231,71 +260,57 @@ Rajamantri/
 ### Complete Game Flow
 
 **Phase 1: Room Setup**
+
 1. Player creates room → Gets 6-char code (e.g., "ABC123")
 2. Share code with friends OR enable bots
 3. Host configures rounds (1-10) and bot difficulty
 4. Host starts game
 
-**Phase 2: Round Start**
-5. Countdown: **3... 2... 1... GO!** with animation
-6. Cards fly from deck with shuffle effect
-7. Roles assigned randomly to all 4 players
+**Phase 2: Round Start** 5. Countdown: **3... 2... 1... GO!** with animation 6. Cards fly from deck with shuffle effect 7. Roles assigned randomly to all 4 players
 
-**Phase 3: Role Reveal**
-8. Players click to flip their cards (3D animation)
-9. Game waits until all players reveal
+**Phase 3: Role Reveal** 8. Players click to flip their cards (3D animation) 9. Game waits until all players reveal
 
-**Phase 4: Mantri's Decision** ⏱️ 10 seconds
-10. Mantri clicks "Call Sipahi Sipahi Chor Ko Pakdo"
-11. Auto-calls if timer expires
-12. System announces: "Mantri called Sipahi!"
+**Phase 4: Mantri's Decision** ⏱️ 10 seconds 10. Mantri clicks "Call Sipahi Sipahi Chor Ko Pakdo" 11. Auto-calls if timer expires 12. System announces: "Mantri called Sipahi!"
 
-**Phase 5: Sipahi's Choice** ⏱️ 2 minutes
-13. Sipahi chooses to point at Raja or Chor
-14. Random choice if timer expires
-15. System announces the guess
+**Phase 5: Sipahi's Choice** ⏱️ 2 minutes 13. Sipahi chooses to point at Raja or Chor 14. Random choice if timer expires 15. System announces the guess
 
-**Phase 6: Score Calculation** ⏱️ 5 seconds
-16. Loading animation shows
-17. Scores calculated based on rules
+**Phase 6: Score Calculation** ⏱️ 5 seconds 16. Loading animation shows 17. Scores calculated based on rules
 
-**Phase 7: Round Results**
-18. **Animated score popup** shows:
-    - Each player's role badge
-    - Points earned (color-coded: green/red/gray)
-    - Sorted by performance
+**Phase 7: Round Results** 18. **Animated score popup** shows: - Each player's role badge - Points earned (color-coded: green/red/gray) - Sorted by performance
 
-**Phase 8: Next Round or End**
-19. If more rounds: Repeat from Phase 2
-20. If final round: **Winner celebration** with confetti!
+**Phase 8: Next Round or End** 19. If more rounds: Repeat from Phase 2 20. If final round: **Winner celebration** with confetti!
 
 ### Timer System
 
-| Phase | Duration | Auto-Action | Visual |
-|-------|----------|-------------|--------|
-| **Mantri Decision** | 10s | Auto-calls Sipahi | Red-orange gradient |
-| **Sipahi Decision** | 2min (120s) | Random guess | Purple-blue gradient |
-| **Score Display** | 5s | Next round/finish | Loading spinner |
+| Phase               | Duration    | Auto-Action       | Visual               |
+| ------------------- | ----------- | ----------------- | -------------------- |
+| **Mantri Decision** | 10s         | Auto-calls Sipahi | Red-orange gradient  |
+| **Sipahi Decision** | 2min (120s) | Random guess      | Purple-blue gradient |
+| **Score Display**   | 5s          | Next round/finish | Loading spinner      |
 
 ### Strategy Tips
 
 **For Raja** 👑
+
 - You have no control but guaranteed 1000 points
 - Trust your Mantri's judgment
 - Stay calm and enjoy the ride
 
 **For Mantri** 💼
+
 - You have 10 seconds to call Sipahi
 - Observe player reactions quickly
 - Call early to give Sipahi more time
 
 **For Sipahi** ⚔️
+
 - You have 2 minutes to analyze
 - Watch for nervous behavior from Chor
 - Consider player chat messages
 - Raja always gets 1000, so catching Chor matters most
 
 **For Chor** 🕵️
+
 - Act innocent and blend in
 - Participate in chat normally
 - Don't reveal too early
@@ -308,75 +323,108 @@ Rajamantri/
 ### Socket.io Event System
 
 **Client → Server Events:**
+
 ```javascript
 // Room Management
-socket.emit('create-room', { 
-  username: "Player1", 
-  rounds: 5, 
-  addBots: true, 
-  botCount: 2, 
-  botDifficulty: "smart" 
-})
+socket.emit("create-room", {
+  username: "Player1",
+  rounds: 5,
+  addBots: true,
+  botCount: 2,
+  botDifficulty: "smart",
+});
 
-socket.emit('join-room', { 
-  roomCode: "ABC123", 
-  username: "Player2" 
-})
+socket.emit("join-room", {
+  roomCode: "ABC123",
+  username: "Player2",
+});
 
-socket.emit('start-game', roomCode)
+socket.emit("start-game", roomCode);
 
 // Gameplay Actions
-socket.emit('reveal-role', roomCode)
-socket.emit('mantri-call-sipahi', roomCode)
-socket.emit('sipahi-guess', roomCode, guessedPlayerId)
+socket.emit("reveal-role", roomCode);
+socket.emit("mantri-call-sipahi", roomCode);
+socket.emit("sipahi-guess", roomCode, guessedPlayerId);
 
 // Chat
-socket.emit('send-chat-message', { 
-  roomCode, message, username 
-})
-socket.emit('send-emoji', { 
-  roomCode, emoji, username 
-})
+socket.emit("send-chat-message", {
+  roomCode,
+  message,
+  username,
+});
+socket.emit("send-emoji", {
+  roomCode,
+  emoji,
+  username,
+});
 ```
 
 **Server → Client Events:**
+
 ```javascript
 // Room Events
-socket.on('room-created', (room) => { /* ... */ })
-socket.on('room-joined', (room) => { /* ... */ })
-socket.on('room-updated', (room) => { /* ... */ })
-socket.on('player-left', ({ playerId, room }) => { /* ... */ })
+socket.on("room-created", (room) => {
+  /* ... */
+});
+socket.on("room-joined", (room) => {
+  /* ... */
+});
+socket.on("room-updated", (room) => {
+  /* ... */
+});
+socket.on("player-left", ({ playerId, room }) => {
+  /* ... */
+});
 
 // Game Flow Events
-socket.on('game-started', (roomData) => { /* Countdown */ })
-socket.on('player-revealed', ({ playerId, allRevealed }) => { /* ... */ })
-socket.on('all-roles-revealed', (room) => { /* Mantri's turn */ })
-socket.on('mantri-called-sipahi', ({ mantriId, sipahiId }) => { /* ... */ })
-socket.on('sipahi-guessed', ({ sipahiId, guessedPlayerId }) => { /* ... */ })
-socket.on('guess-processed', (roomData) => { /* Show results */ })
-socket.on('next-round-started', (roomData) => { /* New round */ })
-socket.on('game-finished', (roomData) => { /* Winner! */ })
+socket.on("game-started", (roomData) => {
+  /* Countdown */
+});
+socket.on("player-revealed", ({ playerId, allRevealed }) => {
+  /* ... */
+});
+socket.on("all-roles-revealed", (room) => {
+  /* Mantri's turn */
+});
+socket.on("mantri-called-sipahi", ({ mantriId, sipahiId }) => {
+  /* ... */
+});
+socket.on("sipahi-guessed", ({ sipahiId, guessedPlayerId }) => {
+  /* ... */
+});
+socket.on("guess-processed", (roomData) => {
+  /* Show results */
+});
+socket.on("next-round-started", (roomData) => {
+  /* New round */
+});
+socket.on("game-finished", (roomData) => {
+  /* Winner! */
+});
 
 // Chat Events
-socket.on('new-chat-message', (message) => { /* Display */ })
+socket.on("new-chat-message", (message) => {
+  /* Display */
+});
 ```
 
 ### Game State Machine
 
 ```javascript
 const GAME_STATES = {
-  WAITING: 'waiting',                    // In lobby
-  STARTING: 'starting',                  // Countdown
-  ROLE_ASSIGNMENT: 'role-assignment',    // Cards dealt
-  GUESSING: 'guessing',                  // Mantri's turn (10s)
-  SIPAHI_GUESSING: 'sipahi-guessing',    // Sipahi's turn (2min)
-  CONCLUDING_SCORES: 'concluding-scores', // 5s delay
-  ROUND_RESULT: 'round-result',          // Score popup
-  FINISHED: 'finished'                   // Game over
-}
+  WAITING: "waiting", // In lobby
+  STARTING: "starting", // Countdown
+  ROLE_ASSIGNMENT: "role-assignment", // Cards dealt
+  GUESSING: "guessing", // Mantri's turn (10s)
+  SIPAHI_GUESSING: "sipahi-guessing", // Sipahi's turn (2min)
+  CONCLUDING_SCORES: "concluding-scores", // 5s delay
+  ROUND_RESULT: "round-result", // Score popup
+  FINISHED: "finished", // Game over
+};
 ```
 
 **State Transitions:**
+
 ```
 WAITING → STARTING (host starts)
   → ROLE_ASSIGNMENT (countdown ends)
@@ -390,48 +438,52 @@ WAITING → STARTING (host starts)
 ### Bot AI System
 
 **Personality Types:**
+
 ```javascript
 const BOT_PERSONALITIES = {
   SMART: {
-    accuracy: 0.7,          // 70% correct
-    thinkTime: [4, 7],      // 4-7 seconds
-    chatChance: 0.3         // 30% chat
+    accuracy: 0.7, // 70% correct
+    thinkTime: [4, 7], // 4-7 seconds
+    chatChance: 0.3, // 30% chat
   },
   RANDOM: {
-    accuracy: 0.25,         // 25% correct
-    thinkTime: [2, 5],      // 2-5 seconds
-    chatChance: 0.15        // 15% chat
+    accuracy: 0.25, // 25% correct
+    thinkTime: [2, 5], // 2-5 seconds
+    chatChance: 0.15, // 15% chat
   },
   NOVICE: {
-    accuracy: 0.1,          // 10% correct
-    thinkTime: [5, 9],      // 5-9 seconds
-    chatChance: 0.05        // 5% chat
-  }
-}
+    accuracy: 0.1, // 10% correct
+    thinkTime: [5, 9], // 5-9 seconds
+    chatChance: 0.05, // 5% chat
+  },
+};
 ```
 
 **Bot Behavior:**
+
 ```javascript
 // 1. Role Reveal (1-4s delay)
 setTimeout(() => {
-  socket.emit('reveal-role', roomCode);
+  socket.emit("reveal-role", roomCode);
 }, random(1000, 4000));
 
 // 2. Mantri Calls (2-5s delay)
 setTimeout(() => {
-  socket.emit('mantri-call-sipahi', roomCode);
+  socket.emit("mantri-call-sipahi", roomCode);
 }, random(2000, 5000));
 
 // 3. Sipahi Guesses (personality-based)
 setTimeout(() => {
   const target = calculateGuess(personality, history);
-  socket.emit('sipahi-guess', roomCode, target);
+  socket.emit("sipahi-guess", roomCode, target);
 }, personality.thinkTime * 1000);
 
 // 4. Chat (30% chance)
 if (Math.random() < 0.3) {
-  socket.emit('send-chat-message', {
-    roomCode, message: "Good game! 🎮", username: botName
+  socket.emit("send-chat-message", {
+    roomCode,
+    message: "Good game! 🎮",
+    username: botName,
   });
 }
 ```
@@ -439,6 +491,7 @@ if (Math.random() < 0.3) {
 ### Data Models
 
 **Room Object:**
+
 ```javascript
 {
   code: "ABC123",              // 6-char uppercase
@@ -458,6 +511,7 @@ if (Math.random() < 0.3) {
 ```
 
 **Player Object:**
+
 ```javascript
 {
   id: "socket-id" | "bot-123",
@@ -474,6 +528,7 @@ if (Math.random() < 0.3) {
 ```
 
 **Chat Message:**
+
 ```javascript
 {
   id: "timestamp-string",
@@ -491,9 +546,11 @@ if (Math.random() < 0.3) {
 ## 🎨 Use Cases
 
 ### Use Case 1: Friends Playing Together
+
 **Scenario**: 4 friends want to play online
 
 **Steps:**
+
 1. Host creates room, gets code "XYZ123"
 2. Shares code via WhatsApp/Discord
 3. All join using the code
@@ -501,16 +558,19 @@ if (Math.random() < 0.3) {
 5. Everyone plays through 5 rounds
 6. Winner announced with confetti
 
-**Benefits**: 
+**Benefits**:
+
 - No registration needed
 - Quick setup (<30 seconds)
 - Real-time sync
 - Cross-platform (mobile + desktop)
 
 ### Use Case 2: Solo Practice with AI
+
 **Scenario**: New player wants to learn
 
 **Steps:**
+
 1. Player creates room alone
 2. Enables "Add Bots" option
 3. Sets bot difficulty to "NOVICE"
@@ -518,15 +578,18 @@ if (Math.random() < 0.3) {
 5. Practices strategy without pressure
 
 **Benefits**:
+
 - Learn at own pace
 - No waiting for players
 - AI provides realistic gameplay
 - Can experiment with strategies
 
 ### Use Case 3: Tournament Mode
+
 **Scenario**: 10 rounds competition
 
 **Steps:**
+
 1. Host creates room with 10 rounds
 2. All players join
 3. Plays through long session
@@ -534,30 +597,36 @@ if (Math.random() < 0.3) {
 5. Winner determined by cumulative score
 
 **Benefits**:
+
 - Extended gameplay (20-30 minutes)
 - Strategic depth increases
 - Score history preserved
 - Comeback opportunities
 
 ### Use Case 4: Quick Match
+
 **Scenario**: 5-minute break
 
 **Steps:**
+
 1. Create room with 2 rounds only
 2. Add 3 SMART bots instantly
 3. Play quick 2-round game
 4. Results in ~5 minutes
 
 **Benefits**:
+
 - Ultra-fast setup
 - No coordination needed
 - Perfect for breaks
 - Still competitive
 
 ### Use Case 5: Mobile Gaming
+
 **Scenario**: Playing on phone while commuting
 
 **Steps:**
+
 1. Open on mobile browser
 2. Responsive UI adapts
 3. Touch-optimized controls
@@ -565,6 +634,7 @@ if (Math.random() < 0.3) {
 5. Full feature parity
 
 **Benefits**:
+
 - Works on all devices
 - No app download required
 - Same experience as desktop
@@ -577,9 +647,11 @@ if (Math.random() < 0.3) {
 ### REST Endpoints
 
 #### `GET /`
+
 **Description**: Server health check
 
 **Response:**
+
 ```json
 {
   "message": "Raja Mantri Chor Sipahi Server is running!",
@@ -589,9 +661,11 @@ if (Math.random() < 0.3) {
 ```
 
 #### `GET /rooms`
+
 **Description**: List all active rooms (debugging)
 
 **Response:**
+
 ```json
 {
   "rooms": [
@@ -606,15 +680,19 @@ if (Math.random() < 0.3) {
 ```
 
 #### `GET /room/:roomCode`
+
 **Description**: Get specific room info
 
 **Parameters**: `roomCode` (string, 6 chars)
 
 **Response:**
+
 ```json
 {
   "code": "ABC123",
-  "players": [ /* ... */ ],
+  "players": [
+    /* ... */
+  ],
   "gameState": "role-assignment",
   "currentRound": 2,
   "rounds": 5
@@ -624,61 +702,95 @@ if (Math.random() < 0.3) {
 ### Socket.io Events Reference
 
 **Connection:**
+
 ```javascript
-socket.on('connect', () => {
-  console.log('Connected to server');
+socket.on("connect", () => {
+  console.log("Connected to server");
 });
 
-socket.on('disconnect', () => {
-  console.log('Disconnected from server');
+socket.on("disconnect", () => {
+  console.log("Disconnected from server");
 });
 ```
 
 **Room Management:**
+
 ```javascript
 // Create Room
-socket.emit('create-room', { username, rounds, addBots, botCount, botDifficulty });
-socket.on('room-created', (room) => { /* Navigate to lobby */ });
+socket.emit("create-room", {
+  username,
+  rounds,
+  addBots,
+  botCount,
+  botDifficulty,
+});
+socket.on("room-created", (room) => {
+  /* Navigate to lobby */
+});
 
 // Join Room
-socket.emit('join-room', { roomCode, username });
-socket.on('room-joined', (room) => { /* Navigate to lobby */ });
-socket.on('room-updated', (room) => { /* Update UI */ });
+socket.emit("join-room", { roomCode, username });
+socket.on("room-joined", (room) => {
+  /* Navigate to lobby */
+});
+socket.on("room-updated", (room) => {
+  /* Update UI */
+});
 
 // Start Game
-socket.emit('start-game', roomCode);
-socket.on('game-started', (roomData) => { /* Navigate to game */ });
+socket.emit("start-game", roomCode);
+socket.on("game-started", (roomData) => {
+  /* Navigate to game */
+});
 ```
 
 **Gameplay:**
+
 ```javascript
 // Reveal Role
-socket.emit('reveal-role', roomCode);
-socket.on('player-revealed', ({ playerId, allRevealed }) => { /* ... */ });
-socket.on('all-roles-revealed', (room) => { /* Start Mantri timer */ });
+socket.emit("reveal-role", roomCode);
+socket.on("player-revealed", ({ playerId, allRevealed }) => {
+  /* ... */
+});
+socket.on("all-roles-revealed", (room) => {
+  /* Start Mantri timer */
+});
 
 // Mantri Calls Sipahi
-socket.emit('mantri-call-sipahi', roomCode);
-socket.on('mantri-called-sipahi', ({ mantriId, sipahiId }) => { /* Start Sipahi timer */ });
+socket.emit("mantri-call-sipahi", roomCode);
+socket.on("mantri-called-sipahi", ({ mantriId, sipahiId }) => {
+  /* Start Sipahi timer */
+});
 
 // Sipahi Guesses
-socket.emit('sipahi-guess', roomCode, guessedPlayerId);
-socket.on('sipahi-guessed', ({ sipahiId, guessedPlayerId }) => { /* Calculating... */ });
-socket.on('guess-processed', (roomData) => { /* Show scores */ });
+socket.emit("sipahi-guess", roomCode, guessedPlayerId);
+socket.on("sipahi-guessed", ({ sipahiId, guessedPlayerId }) => {
+  /* Calculating... */
+});
+socket.on("guess-processed", (roomData) => {
+  /* Show scores */
+});
 
 // Next Round / End
-socket.on('next-round-started', (roomData) => { /* New round */ });
-socket.on('game-finished', (roomData) => { /* Winner celebration */ });
+socket.on("next-round-started", (roomData) => {
+  /* New round */
+});
+socket.on("game-finished", (roomData) => {
+  /* Winner celebration */
+});
 ```
 
 **Chat:**
+
 ```javascript
 // Send Message
-socket.emit('send-chat-message', { roomCode, message, username });
-socket.emit('send-emoji', { roomCode, emoji, username });
+socket.emit("send-chat-message", { roomCode, message, username });
+socket.emit("send-emoji", { roomCode, emoji, username });
 
 // Receive Messages
-socket.on('new-chat-message', (message) => { /* Display in chat */ });
+socket.on("new-chat-message", (message) => {
+  /* Display in chat */
+});
 ```
 
 ---
@@ -688,46 +800,104 @@ socket.on('new-chat-message', (message) => { /* Display in chat */ });
 ### Common Issues
 
 #### ❌ "Room not found" error
+
 **Problem**: Can't join room with code
 
 **Solutions**:
+
 1. Double-check room code (case-sensitive)
 2. Ensure room hasn't closed
 3. Ask host to create new room
 4. Verify server is running
 
 #### ❌ Cards not flipping
+
 **Problem**: Click "Reveal Card" but nothing happens
 
 **Solutions**:
+
 1. Enable hardware acceleration in browser
 2. Update to latest Chrome/Firefox
 3. Clear cache: `Ctrl+Shift+Delete`
 4. Check console (`F12`) for errors
 
 #### ❌ Chat messages delayed
+
 **Problem**: Messages don't show up or arrive late
 
 **Solutions**:
+
 1. Check network connection
 2. Open DevTools (`F12`) → Network → WS tab
 3. Verify websocket connection
 4. Restart server
 5. Refresh page (`F5`)
 
+#### ❌ Chat not expanding when clicked
+
+**Problem**: Click message icon but chat stays minimized
+
+**Solutions**:
+
+1. Refresh page (`F5`)
+2. Check browser console (`F12`) for errors
+3. Clear localStorage: `localStorage.clear()` in console
+4. Ensure you're using latest version
+5. Try clicking the chat header directly
+
+#### ❌ Game content hidden on mobile
+
+**Problem**: Game area disappears when chat opens on small screens
+
+**Solutions**:
+
+1. Update to latest version (chat now overlays game)
+2. Minimize chat by clicking header
+3. Use backdrop click (click outside chat) to close
+4. Rotate device to landscape mode
+5. Report bug if issue persists
+
+#### ❌ Chat overlay blocking interactions
+
+**Problem**: Can't click game elements when chat is minimized
+
+**Solutions**:
+
+1. Ensure chat is fully minimized (header only visible)
+2. Click outside chat area to dismiss overlay
+3. Refresh page if overlay still blocking
+4. Check `z-index` conflicts in browser DevTools
+5. Verify parent state sync in console
+
+#### ❌ Port 3000 already in use
+
+**Problem**: React app won't start on default port
+
+**Solutions**:
+
+1. Accept alternate port when prompted (usually 3002)
+2. Kill process using port: `netstat -ano | findstr :3000`
+3. Manually specify port: `set PORT=3001 && npm start`
+4. Close other React apps
+5. Restart terminal/computer if needed
+
 #### ❌ Bots not playing
+
 **Problem**: Bots added but don't reveal/guess
 
 **Solutions**:
+
 1. Ensure "Add Bots" was checked
 2. Wait for role reveal phase
 3. Check server console for errors
 4. Restart with fresh room
 
 #### ❌ Scores not updating
+
 **Problem**: Scores stuck at 0
 
 **Solutions**:
+
 1. Wait 5 seconds after Sipahi's guess
 2. Check if score popup appeared
 3. Verify `guess-processed` event in DevTools
@@ -736,10 +906,11 @@ socket.on('new-chat-message', (message) => { /* Display in chat */ });
 ### Debug Mode
 
 **Client (`src/contexts/SocketContext.js`):**
+
 ```javascript
-const socket = io('http://localhost:5001', {
-  transports: ['websocket'],
-  debug: true  // Add this
+const socket = io("http://localhost:5001", {
+  transports: ["websocket"],
+  debug: true, // Add this
 });
 
 socket.onAny((eventName, ...args) => {
@@ -748,10 +919,11 @@ socket.onAny((eventName, ...args) => {
 ```
 
 **Server (`server/index.js`):**
+
 ```javascript
-io.on('connection', (socket) => {
+io.on("connection", (socket) => {
   console.log(`[Server] New connection: ${socket.id}`);
-  
+
   socket.onAny((eventName, ...args) => {
     console.log(`[Server] ${eventName}:`, args);
   });
@@ -776,6 +948,7 @@ io.on('connection', (socket) => {
 ### Environment Variables
 
 **Server (`.env`):**
+
 ```bash
 PORT=5001
 NODE_ENV=production
@@ -785,6 +958,7 @@ SOCKET_PING_TIMEOUT=60000
 ```
 
 **Client (`.env`):**
+
 ```bash
 REACT_APP_API_URL=https://api.yourdomain.com
 REACT_APP_SOCKET_URL=https://socket.yourdomain.com
@@ -793,6 +967,7 @@ REACT_APP_SOCKET_URL=https://socket.yourdomain.com
 ### Deployment Platforms
 
 **Heroku (Easy):**
+
 ```bash
 heroku create rajamantri-game
 heroku config:set NODE_ENV=production
@@ -801,6 +976,7 @@ heroku open
 ```
 
 **Docker (Containerized):**
+
 ```dockerfile
 FROM node:18-alpine
 WORKDIR /usr/src/app
@@ -820,6 +996,7 @@ CMD ["node", "server/index.js"]
 ## 💡 Feature Status
 
 ### ✅ Fully Implemented
+
 - [x] Real-time multiplayer (Socket.io)
 - [x] Room creation with codes
 - [x] AI opponents (3 difficulties)
@@ -839,6 +1016,7 @@ CMD ["node", "server/index.js"]
 - [x] Chat message highlighting
 
 ### 🚀 Upcoming Features
+
 - [ ] Sound effects & music
 - [ ] Player avatars upload
 - [ ] Room passwords
@@ -876,6 +1054,7 @@ We welcome contributions! Here's how:
 - Add comments for complex logic
 
 ### Commit Message Convention
+
 - `feat:` New feature
 - `fix:` Bug fix
 - `docs:` Documentation changes
