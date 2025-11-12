@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSocket } from "../contexts/SocketContext";
 
-const Chat = ({ roomCode, currentUsername, onClose, isOpenFromParent }) => {
+const Chat = ({ roomCode, currentUsername, onClose, isOpenFromParent, playChatNotification }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [isOpen, setIsOpen] = useState(true);
@@ -37,6 +37,12 @@ const Chat = ({ roomCode, currentUsername, onClose, isOpenFromParent }) => {
     const handleNewMessage = (message) => {
       console.log("📨 New message received:", message);
       setMessages((prev) => [...prev, message]);
+      
+      // 🔊 Play chat notification sound for new messages
+      // Don't play for your own messages
+      if (message.username !== currentUsername && playChatNotification) {
+        playChatNotification();
+      }
     };
 
     socket.on("new-chat-message", handleNewMessage);
@@ -44,7 +50,7 @@ const Chat = ({ roomCode, currentUsername, onClose, isOpenFromParent }) => {
     return () => {
       socket.off("new-chat-message", handleNewMessage);
     };
-  }, [socket]);
+  }, [socket, currentUsername, playChatNotification]);
 
   useEffect(() => {
     scrollToBottom();

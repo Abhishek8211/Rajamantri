@@ -4,10 +4,28 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSocket } from "../contexts/SocketContext";
 import RoleCard from "../components/RoleCard";
 import Chat from "../components/Chat";
+import useSoundEffects from "../hooks/useSoundEffects";
 
 const Game = () => {
   const { roomCode } = useParams();
   const { socket } = useSocket();
+  
+  // Sound effects hook
+  const {
+    playCardFlip,
+    playCardShuffle,
+    playCountdown,
+    playCorrectGuess,
+    playWrongGuess,
+    playVictory,
+    playChatNotification,
+    playButtonClick,
+    startBackgroundMusic,
+    stopBackgroundMusic,
+    toggleMute,
+    isMuted,
+  } = useSoundEffects();
+  
   const [players, setPlayers] = useState([]);
   const [currentRound, setCurrentRound] = useState(1);
   const [gameState, setGameState] = useState("role-assignment");
@@ -110,8 +128,14 @@ const Game = () => {
       setShowRoundResult(false);
       setCardRevealed(false);
 
+      // 🔊 Start background music when game starts
+      startBackgroundMusic();
+
       // Start countdown animation
       setCountdown(3);
+      // 🔊 Play countdown sound
+      playCountdown();
+      
       const countdownInterval = setInterval(() => {
         setCountdown((prev) => {
           if (prev === 1) {
@@ -126,6 +150,9 @@ const Game = () => {
       setTimeout(() => {
         setCountdown(null);
         setShowCardAnimation(true);
+        // 🔊 Play card shuffle sound
+        playCardShuffle();
+        
         // Hide card animation after 3 seconds
         setTimeout(() => {
           setShowCardAnimation(false);
@@ -187,6 +214,20 @@ const Game = () => {
       setShowRoundResult(true);
       setMantriCalledSipahi(false);
 
+      // 🔊 Determine if Sipahi guessed correctly and play appropriate sound
+      // Find Sipahi player and check their score change
+      const sipahiPlayer = roomData.players.find(p => p.role === "sipahi");
+      if (sipahiPlayer) {
+        const scoreChange = (roomData.roundResult?.scores?.[sipahiPlayer.id] || 0) - 
+                           (roomData.roundResult?.oldScores?.[sipahiPlayer.id] || 0);
+        // Sipahi gets 500 if correct, 0 if wrong (Raja gets 1000, Mantri gets 800)
+        if (scoreChange === 500) {
+          playCorrectGuess();
+        } else if (scoreChange === 0) {
+          playWrongGuess();
+        }
+      }
+
       // Store round history
       setRoundHistory((prev) => ({
         ...prev,
@@ -211,6 +252,9 @@ const Game = () => {
       console.log("🎊 Game finished:", roomData);
       setScores(roomData.scores || {});
 
+      // 🔊 Play victory sound
+      playVictory();
+
       // Find the winner
       const sortedPlayers = roomData.players.sort(
         (a, b) => (roomData.scores[b.id] || 0) - (roomData.scores[a.id] || 0)
@@ -233,6 +277,9 @@ const Game = () => {
 
       // Start countdown animation for new round
       setCountdown(3);
+      // 🔊 Play countdown sound for new round
+      playCountdown();
+      
       const countdownInterval = setInterval(() => {
         setCountdown((prev) => {
           if (prev === 1) {
@@ -247,6 +294,9 @@ const Game = () => {
       setTimeout(() => {
         setCountdown(null);
         setShowCardAnimation(true);
+        // 🔊 Play card shuffle sound for new round
+        playCardShuffle();
+        
         // Hide card animation after 3 seconds
         setTimeout(() => {
           setShowCardAnimation(false);
@@ -301,6 +351,9 @@ const Game = () => {
   const handleRevealRole = () => {
     if (!cardRevealed) {
       setCardRevealed(true);
+      // 🔊 Play card flip sound
+      playCardFlip();
+      
       // Find my role from players array and set it
       const myPlayer = players.find((p) => p.id === socket?.id);
       if (myPlayer && myPlayer.role) {
@@ -339,12 +392,18 @@ const Game = () => {
       return;
     }
 
+    // 🔊 Play button click sound
+    playButtonClick();
+    
     setIsTimerRunning(false);
     socket.emit("mantri-call-sipahi", roomCode);
     console.log("✅ Event emitted!");
   };
 
   const handleSipahiGuess = (guessedPlayerId) => {
+    // 🔊 Play button click sound
+    playButtonClick();
+    
     setIsSipahiTimerRunning(false);
     socket.emit("sipahi-guess", roomCode, guessedPlayerId);
   };
@@ -480,7 +539,7 @@ const Game = () => {
             </div>
           </div>
 
-          {/* Right: Scores Button + Chat Toggle */}
+          {/* Right: Scores Button + Mute Button + Chat Toggle */}
           <div className="flex items-center gap-2">
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -490,6 +549,28 @@ const Game = () => {
             >
               <span>🏆</span>
               <span className="hidden sm:inline">Scores</span>
+            </motion.button>
+
+            {/* 🔊 Mute/Unmute Button */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                playButtonClick();
+                toggleMute();
+              }}
+              className={`${
+                isMuted 
+                  ? "bg-gray-500 hover:bg-gray-600" 
+                  : "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+              } text-white p-2 rounded-lg shadow-lg border ${
+                isMuted ? "border-gray-300" : "border-purple-300"
+              } flex items-center justify-center`}
+              title={isMuted ? "Unmute Sound" : "Mute Sound"}
+            >
+              <span className="text-xl">
+                {isMuted ? "🔇" : "🔊"}
+              </span>
             </motion.button>
 
             {/* Chat Toggle for Mobile */}
@@ -787,7 +868,7 @@ const Game = () => {
                   animate={{ scale: 1, rotate: 0 }}
                   exit={{ scale: 0, rotate: 180 }}
                   transition={{ duration: 0.8, type: "spring", bounce: 0.5 }}
-                  className="bg-gradient-to-br from-yellow-600 via-amber-500 to-orange-600 rounded-3xl p-8 sm:p-12 max-w-2xl w-full border-4 border-yellow-300 shadow-2xl relative overflow-hidden"
+                  className="bg-gradient-to-br from-yellow-600 via-amber-500 to-orange-600 rounded-2xl p-6 sm:p-8 max-w-lg w-full border-4 border-yellow-300 shadow-2xl relative overflow-hidden"
                 >
                   {/* Confetti Background Effect */}
                   <div className="absolute inset-0 opacity-20">
@@ -821,7 +902,7 @@ const Game = () => {
                       initial={{ scale: 0, y: -50 }}
                       animate={{ scale: 1, y: 0 }}
                       transition={{ delay: 0.3, type: "spring" }}
-                      className="text-8xl sm:text-9xl mb-4"
+                      className="text-6xl sm:text-8xl mb-4"
                     >
                       🏆
                     </motion.div>
@@ -831,7 +912,7 @@ const Game = () => {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.5 }}
-                      className="text-4xl sm:text-6xl font-black text-white mb-6 drop-shadow-lg"
+                      className="text-3xl sm:text-5xl font-black text-white mb-6 drop-shadow-lg"
                     >
                       WINNER!
                     </motion.h1>
@@ -841,11 +922,11 @@ const Game = () => {
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 0.7 }}
-                      className="bg-white/20 backdrop-blur-md rounded-2xl p-6 mb-6 border-2 border-white/50"
+                      className="bg-white/20 backdrop-blur-md rounded-2xl p-4 mb-6 border-2 border-white/50"
                     >
                       <div className="flex flex-col items-center gap-4">
                         <div
-                          className={`w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold border-4 border-white shadow-xl ${
+                          className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center text-2xl sm:text-3xl font-bold border-4 border-white shadow-xl ${
                             winner.isBot
                               ? "bg-green-500"
                               : "bg-gradient-to-r from-purple-600 to-pink-600"
@@ -856,10 +937,10 @@ const Game = () => {
                             : winner.username[0].toUpperCase()}
                         </div>
                         <div>
-                          <p className="text-3xl sm:text-4xl font-black text-white mb-2">
+                          <p className="text-2xl sm:text-3xl font-black text-white mb-2">
                             {winner.username}
                           </p>
-                          <p className="text-xl sm:text-2xl font-bold text-yellow-200">
+                          <p className="text-lg sm:text-xl font-bold text-yellow-200">
                             {scores[winner.id] || 0} Points
                           </p>
                         </div>
@@ -920,7 +1001,7 @@ const Game = () => {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => (window.location.href = "/")}
-                      className="mt-8 bg-white text-amber-600 px-8 py-4 rounded-full font-black text-xl shadow-xl hover:bg-yellow-100 transition-all"
+                      className="mt-6 bg-white text-amber-600 px-6 py-3 rounded-full font-black text-lg shadow-xl hover:bg-yellow-100 transition-all"
                     >
                       🏠 Back to Home
                     </motion.button>
@@ -1409,6 +1490,7 @@ const Game = () => {
                   currentUsername={currentUsername}
                   onClose={() => setIsChatOpen(false)}
                   isOpenFromParent={isChatOpen}
+                  playChatNotification={playChatNotification}
                 />
               </div>
             </div>
