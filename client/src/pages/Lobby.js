@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useSocket } from "../contexts/SocketContext";
+import { ToastContainer } from "../components/Toast";
 
 const Lobby = () => {
   const { roomCode } = useParams();
@@ -10,6 +11,18 @@ const Lobby = () => {
   const [players, setPlayers] = useState([]);
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [toasts, setToasts] = useState([]);
+  const [botCount, setBotCount] = useState(0);
+  const [showBotControls, setShowBotControls] = useState(false);
+
+  const addToast = (message, type = "error", duration = 5000) => {
+    const id = Date.now();
+    setToasts((prev) => [...prev, { id, message, type, duration }]);
+  };
+
+  const removeToast = (id) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  };
 
   useEffect(() => {
     if (!socket) {
@@ -55,7 +68,7 @@ const Lobby = () => {
     // Handle errors
     const handleError = (error) => {
       console.log("❌ Socket error:", error);
-      alert(error);
+      addToast(error, "error");
       setLoading(false);
     };
 
@@ -65,6 +78,15 @@ const Lobby = () => {
       navigate(`/game/${roomCode}`);
     };
 
+    // Handle being kicked from room
+    const handleKickedFromRoom = (data) => {
+      console.log("👋 Kicked from room:", data.message);
+      addToast(data.message, "error", 4000);
+      setTimeout(() => {
+        navigate("/");
+      }, 2000);
+    };
+
     // Set up all listeners
     socket.on("room-created", handleRoomCreated);
     socket.on("room-joined", handleRoomJoined);
@@ -72,6 +94,7 @@ const Lobby = () => {
     socket.on("player-joined", handlePlayerJoined);
     socket.on("error", handleError);
     socket.on("game-started", handleGameStarted);
+    socket.on("kicked-from-room", handleKickedFromRoom);
 
     // Request room update when component mounts
     socket.emit("request-room-update", roomCode);
@@ -85,17 +108,87 @@ const Lobby = () => {
       socket.off("player-joined", handlePlayerJoined);
       socket.off("error", handleError);
       socket.off("game-started", handleGameStarted);
+      socket.off("kicked-from-room", handleKickedFromRoom);
     };
-  }, [socket, roomCode, navigate]);
+  }, [socket, roomCode, navigate, addToast]);
 
   const handleStartGame = () => {
     console.log("🎯 Starting game for room:", roomCode);
     socket.emit("start-game", roomCode);
   };
 
+  const handleAddBots = () => {
+    if (botCount < 1 || botCount > 3) {
+      addToast("Please select between 1-3 bots", "warning");
+      return;
+    }
+
+    const humanCount = humanPlayers.length;
+    const totalPlayers = humanCount + botCount;
+
+    if (totalPlayers > 4) {
+      addToast(
+        `Cannot add ${botCount} bots. Maximum 4 players total. (Currently: ${humanCount} humans)`,
+        "warning"
+      );
+      return;
+    }
+
+    // Update room settings
+    socket.emit("update-bot-settings", {
+      roomCode,
+      addBots: true,
+      botCount: botCount,
+      botDifficulty: "smart",
+    });
+
+    addToast(
+      `✅ ${botCount} bot(s) will join when game starts!`,
+      "success",
+      3000
+    );
+    setShowBotControls(false);
+  };
+
+  const handleRemoveBots = () => {
+    socket.emit("update-bot-settings", {
+      roomCode,
+      addBots: false,
+      botCount: 0,
+    });
+
+    addToast("🗑️ Bot settings removed", "info", 3000);
+    setBotCount(0);
+  };
+
+  const handleRemovePlayer = (playerId, playerName) => {
+    if (!isHost) {
+      addToast("Only the host can remove players", "error");
+      return;
+    }
+
+    if (playerId === socket?.id) {
+      addToast("You cannot remove yourself", "error");
+      return;
+    }
+
+    // Confirm removal
+    if (
+      window.confirm(
+        `Are you sure you want to remove ${playerName} from the lobby?`
+      )
+    ) {
+      socket.emit("remove-player", {
+        roomCode,
+        playerId,
+      });
+      addToast(`✅ ${playerName} has been removed`, "success", 3000);
+    }
+  };
+
   const copyRoomCode = () => {
     navigator.clipboard.writeText(roomCode);
-    alert("Room code copied to clipboard!");
+    addToast(`📋 Room code ${roomCode} copied!`, "success", 2000);
   };
 
   // Debug: Log current state
@@ -118,9 +211,7 @@ const Lobby = () => {
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
         <div className="bg-white/10 backdrop-blur-md border-2 border-white/20 rounded-xl shadow-2xl p-6 max-w-md w-full text-center">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-400 mx-auto mb-3"></div>
-          <h2 className="text-lg font-bold text-white mb-2">
-            Loading Room...
-          </h2>
+          <h2 className="text-lg font-bold text-white mb-2">Loading Room...</h2>
           <p className="text-white/80 text-sm">Room: {roomCode}</p>
         </div>
       </div>
@@ -141,10 +232,13 @@ const Lobby = () => {
               <span className="text-xl">👑</span>
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-black text-white">Game Lobby</h1>
+              <h1 className="text-xl sm:text-2xl font-black text-white">
+                Game Lobby
+              </h1>
               {room && (
                 <p className="text-white/70 text-xs">
-                  {room.rounds} Rounds • {humanPlayers.length} Human{humanPlayers.length !== 1 ? "s" : ""} • {plannedBotCount} AI
+                  {room.rounds} Rounds • {humanPlayers.length} Human
+                  {humanPlayers.length !== 1 ? "s" : ""} • {plannedBotCount} AI
                 </p>
               )}
             </div>
@@ -196,7 +290,9 @@ const Lobby = () => {
                   <div className="flex items-center gap-2 mb-2">
                     <div
                       className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
-                        player.isBot ? "bg-blue-500" : "bg-gradient-to-r from-amber-500 to-orange-500"
+                        player.isBot
+                          ? "bg-blue-500"
+                          : "bg-gradient-to-r from-amber-500 to-orange-500"
                       }`}
                     >
                       {player.isBot ? "🤖" : player.username[0].toUpperCase()}
@@ -205,7 +301,7 @@ const Lobby = () => {
                       <p className="font-bold text-white text-sm truncate">
                         {player.username}
                       </p>
-                      <div className="flex gap-1 flex-wrap">
+                      <div className="flex gap-1 flex-wrap items-center">
                         {player.isHost && (
                           <span className="text-xs bg-amber-500 text-white px-1.5 py-0.5 rounded">
                             👑 Host
@@ -218,12 +314,140 @@ const Lobby = () => {
                         )}
                       </div>
                     </div>
+                    {/* Remove button (Host only, can't remove self) */}
+                    {isHost && player.id !== socket?.id && (
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() =>
+                          handleRemovePlayer(player.id, player.username)
+                        }
+                        className="w-7 h-7 rounded-full bg-red-500/80 hover:bg-red-600 flex items-center justify-center transition-colors"
+                        title={`Remove ${player.username}`}
+                      >
+                        <span className="text-white text-lg leading-none">
+                          ×
+                        </span>
+                      </motion.button>
+                    )}
                   </div>
                 </motion.div>
               ))}
             </div>
           )}
         </div>
+
+        {/* Bot Controls Section (Host Only) */}
+        {isHost && players.length < 4 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 flex justify-center"
+          >
+            <div className="max-w-md w-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 backdrop-blur-sm border border-blue-400/30 rounded-xl p-4 shadow-lg">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <span className="text-lg">🤖</span>
+                  <span>AI Players</span>
+                </h3>
+                {plannedBotCount > 0 && (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleRemoveBots}
+                    className="text-xs bg-red-500/80 hover:bg-red-600 text-white px-2.5 py-1 rounded-lg font-semibold"
+                  >
+                    🗑️ Remove
+                  </motion.button>
+                )}
+              </div>
+
+              <AnimatePresence>
+                {!showBotControls ? (
+                  <motion.button
+                    key="add-bots-btn"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => setShowBotControls(true)}
+                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-2.5 rounded-lg font-bold text-sm transition-all shadow-md"
+                  >
+                    {plannedBotCount > 0
+                      ? `✏️ Modify Bots (Current: ${plannedBotCount})`
+                      : "➕ Add AI Players"}
+                  </motion.button>
+                ) : (
+                  <motion.div
+                    key="bot-controls"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-4"
+                  >
+                    <div>
+                      <label className="text-white text-xs font-semibold mb-2 block text-center">
+                        Select Number of Bots
+                      </label>
+                      <div className="flex gap-2 justify-center">
+                        {[1, 2, 3].map((num) => (
+                          <motion.button
+                            key={num}
+                            whileHover={{ scale: 1.08 }}
+                            whileTap={{ scale: 0.92 }}
+                            onClick={() => setBotCount(num)}
+                            disabled={humanPlayers.length + num > 4}
+                            className={`w-16 h-16 rounded-xl font-bold text-lg transition-all shadow-md ${
+                              botCount === num
+                                ? "bg-gradient-to-br from-amber-400 to-amber-600 text-white scale-105 ring-2 ring-amber-300"
+                                : humanPlayers.length + num > 4
+                                ? "bg-gray-600/50 text-gray-400 cursor-not-allowed"
+                                : "bg-white/20 text-white hover:bg-white/30"
+                            }`}
+                          >
+                            <div className="flex flex-col items-center gap-1">
+                              <span className="text-2xl">🤖</span>
+                              <span className="text-xs">{num}</span>
+                            </div>
+                          </motion.button>
+                        ))}
+                      </div>
+                      <p className="text-white/70 text-xs mt-3 text-center bg-white/10 rounded-lg py-1.5 px-3">
+                        Total: {humanPlayers.length} human
+                        {humanPlayers.length !== 1 ? "s" : ""} + {botCount} bot
+                        {botCount !== 1 ? "s" : ""} ={" "}
+                        <span className="font-bold text-amber-300">
+                          {humanPlayers.length + botCount}/4
+                        </span>
+                      </p>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={handleAddBots}
+                        disabled={botCount < 1}
+                        className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white py-2.5 rounded-lg font-bold text-sm transition-all shadow-md"
+                      >
+                        ✅ Confirm
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => setShowBotControls(false)}
+                        className="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white py-2.5 rounded-lg font-bold text-sm transition-all shadow-md"
+                      >
+                        ❌ Cancel
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        )}
 
         {/* Action Section */}
         <div className="space-y-2">
@@ -238,7 +462,8 @@ const Lobby = () => {
               >
                 <span className="flex items-center justify-center gap-2">
                   <span>🚀</span>
-                  Start Game ({humanPlayers.length} Human{humanPlayers.length !== 1 ? "s" : ""})
+                  Start Game ({humanPlayers.length} Human
+                  {humanPlayers.length !== 1 ? "s" : ""})
                 </span>
               </motion.button>
               {humanPlayers.length < 2 && (
@@ -254,7 +479,8 @@ const Lobby = () => {
               className="bg-blue-500/20 backdrop-blur-sm border border-blue-400/30 text-white py-3 px-4 rounded-lg text-center"
             >
               <p className="font-bold text-sm">
-                ⏳ Waiting for {players.find((p) => p.isHost)?.username} to start...
+                ⏳ Waiting for {players.find((p) => p.isHost)?.username} to
+                start...
               </p>
             </motion.div>
           )}
@@ -262,11 +488,16 @@ const Lobby = () => {
           {/* Info Banner */}
           <div className="bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg p-2 text-center">
             <p className="text-white/80 text-xs">
-              💡 Share room code <span className="font-bold text-amber-300">{roomCode}</span> with friends!
+              💡 Share room code{" "}
+              <span className="font-bold text-amber-300">{roomCode}</span> with
+              friends!
             </p>
           </div>
         </div>
       </motion.div>
+
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 };
