@@ -106,9 +106,78 @@ npm start
 2. Enter your username
 3. Click **"Create Room"**
 4. Choose number of rounds (1-10)
-5. Enable AI bots if playing solo (optional)
+5. **Add AI bots from lobby if needed** (NEW! ⭐)
 6. Share room code with friends OR start game with bots
 7. Reveal your role and play!
+
+---
+
+## 🆕 Recent Updates (Latest Features)
+
+### 🤖 Smart Bot Management
+
+**In-Lobby Bot Controls** - No more pre-game configuration! Host can now:
+
+- Add 1-3 AI players directly from the lobby
+- See planned bot count in real-time
+- Modify bot settings before game starts
+- Remove bots if too many players join
+- Beautiful centered UI with square bot selection buttons
+
+**How it works:**
+
+1. Host clicks "Add AI Players" button
+2. Select number of bots (1, 2, or 3)
+3. See total player count (humans + bots)
+4. Confirm → Bots join when game starts
+5. Remove button available if needed
+
+### 👋 Player Removal System
+
+**Host Controls** - Complete lobby management:
+
+- **Remove any player** (humans or bots) with × button
+- Only host sees remove buttons (on other players)
+- Confirmation dialog prevents accidents
+- Removed players get notified and redirected
+- Chat announces all removals
+- Real-time lobby updates for everyone
+
+**Safety Features:**
+
+- Host cannot remove themselves
+- Non-host players cannot remove anyone
+- Game requires minimum 4 players to start
+- Validation prevents starting with insufficient players
+
+### 🔔 Toast Notification System
+
+**Beautiful Alerts** - No more browser alerts!
+
+- **Top-center positioning** - Never overlaps game UI
+- **4 color-coded types** - Error (red), Warning (amber), Success (green), Info (blue)
+- **Smooth animations** - Slide down with spring physics
+- **Auto-dismiss** - Progress bar shows countdown
+- **Manual close** - Rotating × button
+- **Icon animations** - Shake effect on appear
+- **Multiple toasts** - Stack properly without overlap
+
+### 🎨 UI/UX Improvements
+
+**Lobby Interface:**
+
+- Centered bot controls with max-width design
+- Square 64×64px bot selection buttons with icons
+- Gradient backgrounds and shadows throughout
+- Remove buttons on player cards (host only)
+- Responsive design for all screen sizes
+
+**Animation Polish:**
+
+- Toast slides from -100px with spring effect
+- Bot buttons scale on hover (1.08x)
+- Selected bot shows amber gradient + ring glow
+- Smooth transitions on all interactions
 
 ---
 
@@ -148,6 +217,26 @@ npm start
 - ✅ **Dynamic Layout** - Chat minimizes to header-only on collapse
 - ✅ **Emoji Reactions** - Quick emotional responses
 - ✅ **System Messages** - Game events announced
+
+### 🎯 Lobby Management (New!)
+
+- ✅ **Smart Bot Controls** - Add 1-3 AI players directly from lobby
+- ✅ **Real-time Bot Counter** - See planned bot count before game starts
+- ✅ **Player Removal** - Host can remove any player (humans or bots)
+- ✅ **Centered UI** - Beautiful, centered bot selection interface
+- ✅ **Visual Confirmations** - Animated toasts for all actions
+- ✅ **Minimum Validation** - Game requires exactly 4 players (humans + bots)
+- ✅ **Kick Notifications** - Removed players get notified and redirected
+
+### 🔔 Notification System (New!)
+
+- ✅ **Toast Notifications** - Beautiful animated popups at top-center
+- ✅ **4 Notification Types** - Error (red), Warning (amber), Success (green), Info (blue)
+- ✅ **Smart Positioning** - Top-center placement to avoid UI overlap
+- ✅ **Auto-dismiss** - Closes automatically with progress bar
+- ✅ **Manual Close** - Rotating × button for instant dismissal
+- ✅ **Icon Animations** - Shake effect on appearance
+- ✅ **Multiple Toasts** - Stacks notifications properly
 - ✅ **Player Status** - See who's online/revealed
 
 ### 📊 Scoring & Analytics
@@ -215,6 +304,7 @@ Rajamantri/
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── Chat.js             # Real-time chat with scrollable layout
+│   │   │   ├── Toast.js            # Notification system (NEW) ⭐
 │   │   │   ├── RoleRevealAnimation.js  # 4-stage cinematic reveal
 │   │   │   ├── AnimatedCard.js     # 3D flipping role cards
 │   │   │   ├── CardDeck.js         # Card distribution animation
@@ -793,6 +883,35 @@ socket.on("new-chat-message", (message) => {
 });
 ```
 
+**Lobby Management (NEW):**
+
+```javascript
+// Update Bot Settings
+socket.emit("update-bot-settings", {
+  roomCode,
+  addBots: true,
+  botCount: 2,
+  botDifficulty: "smart",
+});
+socket.on("room-updated", (room) => {
+  /* Lobby UI updates with bot info */
+});
+
+// Remove Player (Host Only)
+socket.emit("remove-player", {
+  roomCode,
+  playerId: "player-socket-id",
+});
+socket.on("room-updated", (room) => {
+  /* Player removed from lobby */
+});
+
+// Kicked from Room
+socket.on("kicked-from-room", ({ message }) => {
+  /* Show notification and redirect to home */
+});
+```
+
 ---
 
 ## 🐛 Troubleshooting
@@ -880,6 +999,55 @@ socket.on("new-chat-message", (message) => {
 3. Manually specify port: `set PORT=3001 && npm start`
 4. Close other React apps
 5. Restart terminal/computer if needed
+
+#### ❌ Cannot start game (insufficient players)
+
+**Problem**: Error: "At least 4 players (including bots) are required to start the game. Currently: X/4"
+
+**Solutions**:
+
+1. **Add more bots** - Click "Add AI Players" in lobby
+2. **Wait for players** - Share room code with friends
+3. **Check bot settings** - Ensure bots are configured correctly
+4. **Total must be 4** - Humans + Bots = 4 players exactly
+5. **Remove and re-add** - If bots show but game won't start, remove and add fresh bots
+
+#### ❌ Player removal not working
+
+**Problem**: × button not appearing or removal fails
+
+**Solutions**:
+
+1. **Check if you're host** - Only host can remove players
+2. **Can't remove yourself** - Host cannot remove their own card
+3. **Confirm the dialog** - Click OK in the confirmation popup
+4. **Check connection** - Ensure stable internet connection
+5. **Refresh lobby** - F5 to reload if buttons don't appear
+
+#### ❌ Kicked from lobby unexpectedly
+
+**Problem**: "You have been removed from the lobby by the host"
+
+**Explanation**: The host removed you from the lobby
+
+**What to do**:
+
+1. Contact the host to ask why
+2. Wait 2 seconds for automatic redirect to home
+3. Join a different room or create your own
+4. Cannot rejoin same room immediately
+
+#### ❌ Toast notifications not appearing
+
+**Problem**: No notification popups showing
+
+**Solutions**:
+
+1. Check browser console for JavaScript errors
+2. Clear browser cache and reload (Ctrl+Shift+Delete)
+3. Disable browser extensions that might block popups
+4. Try different browser (Chrome, Firefox, Edge)
+5. Check if z-index is being overridden by custom CSS
 
 #### ❌ Bots not playing
 
