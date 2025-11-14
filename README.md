@@ -114,6 +114,33 @@ npm start
 
 ## 🆕 Recent Updates (Latest Features)
 
+### 🐛 Critical Bug Fixes (November 2025)
+
+**10 Production Bugs Fixed** - Game is now stable and production-ready!
+
+**Server-Side Fixes:**
+
+- ✅ **Timer Race Condition** - Mantri/Sipahi timers now properly cleaned up on disconnect
+- ✅ **Bot Memory Leaks** - Bot timers cleared when removed from lobby
+- ✅ **Duplicate Room Codes** - Unique code generation with collision detection
+- ✅ **Case-Sensitive Rooms** - Room codes now case-insensitive (ABC123 = abc123)
+
+**Client-Side Fixes:**
+
+- ✅ **Toast Memory Leak** - Limited to 5 toasts max, useCallback optimization
+- ✅ **Chat Auto-Scroll** - Smart scrolling (only when user is near bottom)
+- ✅ **Empty Room Codes** - Validation prevents joining with empty/invalid codes
+- ✅ **Browser Back Button** - Warning dialog protects against accidental navigation
+- ✅ **Score Accuracy** - Server-side score calculation prevents drift
+- ✅ **Sipahi Timer Visibility** - All players now see countdown
+
+**What This Means:**
+
+- No more crashes from timer conflicts
+- Memory usage optimized
+- Better user experience with validation
+- Production-ready stability
+
 ### 🤖 Smart Bot Management
 
 **In-Lobby Bot Controls** - No more pre-game configuration! Host can now:
@@ -929,6 +956,23 @@ socket.on("kicked-from-room", ({ message }) => {
 
 ## 🐛 Troubleshooting
 
+### ✅ Recently Fixed Issues (No Action Needed)
+
+**These bugs have been fixed in the latest version:**
+
+1. ✅ **Timer doesn't stop when Mantri disconnects** → Fixed with cleanup handlers
+2. ✅ **Toasts don't auto-dismiss** → Fixed with useCallback optimization
+3. ✅ **Removed bots still in memory** → Fixed with proper cleanup
+4. ✅ **Chat doesn't scroll to new messages** → Fixed with smart auto-scroll
+5. ✅ **Room codes case-sensitive** → Fixed with normalization
+6. ✅ **Can join with empty room code** → Fixed with validation
+7. ✅ **Browser back breaks game** → Fixed with beforeunload warning
+8. ✅ **Duplicate room codes possible** → Fixed with collision detection
+9. ✅ **Scores show wrong totals** → Fixed with server-side calculation
+10. ✅ **Sipahi timer hidden from others** → Fixed, now visible to all
+
+**If you're experiencing any of these, pull the latest code from GitHub!**
+
 ### Common Issues
 
 #### ❌ "Room not found" error
@@ -937,10 +981,11 @@ socket.on("kicked-from-room", ({ message }) => {
 
 **Solutions**:
 
-1. Double-check room code (case-sensitive)
-2. Ensure room hasn't closed
-3. Ask host to create new room
-4. Verify server is running
+1. Check room code (now case-insensitive: ABC123 = abc123)
+2. Make sure code is exactly 6 characters
+3. Ensure room hasn't closed
+4. Ask host to create new room
+5. Verify server is running
 
 #### ❌ Cards not flipping
 
@@ -964,6 +1009,8 @@ socket.on("kicked-from-room", ({ message }) => {
 3. Verify websocket connection
 4. Restart server
 5. Refresh page (`F5`)
+
+**Note**: Chat now has smart auto-scroll! If you're scrolling up to read old messages, new messages won't interrupt you. Scroll near bottom to re-enable auto-scroll.
 
 #### ❌ Chat not expanding when clicked
 
