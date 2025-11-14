@@ -2,11 +2,19 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSocket } from "../contexts/SocketContext";
 
-const Chat = ({ roomCode, currentUsername, onClose, isOpenFromParent, playChatNotification }) => {
+const Chat = ({
+  roomCode,
+  currentUsername,
+  onClose,
+  isOpenFromParent,
+  playChatNotification,
+}) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [isOpen, setIsOpen] = useState(true);
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null); // BUG FIX #4: Track scroll container
+  const [autoScroll, setAutoScroll] = useState(true); // BUG FIX #4: Auto-scroll state
   const { socket } = useSocket();
 
   // Auto-expand when parent opens the chat
@@ -37,7 +45,7 @@ const Chat = ({ roomCode, currentUsername, onClose, isOpenFromParent, playChatNo
     const handleNewMessage = (message) => {
       console.log("📨 New message received:", message);
       setMessages((prev) => [...prev, message]);
-      
+
       // 🔊 Play chat notification sound for new messages
       // Don't play for your own messages
       if (message.username !== currentUsername && playChatNotification) {
@@ -52,9 +60,19 @@ const Chat = ({ roomCode, currentUsername, onClose, isOpenFromParent, playChatNo
     };
   }, [socket, currentUsername, playChatNotification]);
 
+  // BUG FIX #4: Smart auto-scroll - only scroll if user is near bottom
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (autoScroll && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, autoScroll]);
+
+  // BUG FIX #4: Check if user is scrolled near bottom
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+    setAutoScroll(isNearBottom);
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -201,6 +219,8 @@ const Chat = ({ roomCode, currentUsername, onClose, isOpenFromParent, playChatNo
           >
             {/* Messages Area - Scrollable */}
             <div
+              ref={messagesContainerRef}
+              onScroll={handleScroll}
               className="flex-1 p-3 sm:p-4 overflow-y-auto bg-gradient-to-b from-gray-50 to-gray-100"
               style={{
                 scrollbarWidth: "thin",

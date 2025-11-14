@@ -9,7 +9,7 @@ import useSoundEffects from "../hooks/useSoundEffects";
 const Game = () => {
   const { roomCode } = useParams();
   const { socket } = useSocket();
-  
+
   // Sound effects hook
   const {
     playCardFlip,
@@ -25,7 +25,7 @@ const Game = () => {
     toggleMute,
     isMuted,
   } = useSoundEffects();
-  
+
   const [players, setPlayers] = useState([]);
   const [currentRound, setCurrentRound] = useState(1);
   const [gameState, setGameState] = useState("role-assignment");
@@ -48,6 +48,20 @@ const Game = () => {
   const [isSipahiTimerRunning, setIsSipahiTimerRunning] = useState(false);
   const [showWinner, setShowWinner] = useState(false);
   const [winner, setWinner] = useState(null);
+
+  // BUG FIX #7: Prevent accidental browser back during game
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (gameState !== "finished" && gameState !== "waiting") {
+        e.preventDefault();
+        e.returnValue = "Game in progress. Are you sure you want to leave?";
+        return "Game in progress. Are you sure you want to leave?";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [gameState]);
 
   // Timer effect for Mantri
   useEffect(() => {
@@ -135,7 +149,7 @@ const Game = () => {
       setCountdown(3);
       // 🔊 Play countdown sound
       playCountdown();
-      
+
       const countdownInterval = setInterval(() => {
         setCountdown((prev) => {
           if (prev === 1) {
@@ -152,7 +166,7 @@ const Game = () => {
         setShowCardAnimation(true);
         // 🔊 Play card shuffle sound
         playCardShuffle();
-        
+
         // Hide card animation after 3 seconds
         setTimeout(() => {
           setShowCardAnimation(false);
@@ -216,10 +230,11 @@ const Game = () => {
 
       // 🔊 Determine if Sipahi guessed correctly and play appropriate sound
       // Find Sipahi player and check their score change
-      const sipahiPlayer = roomData.players.find(p => p.role === "sipahi");
+      const sipahiPlayer = roomData.players.find((p) => p.role === "sipahi");
       if (sipahiPlayer) {
-        const scoreChange = (roomData.roundResult?.scores?.[sipahiPlayer.id] || 0) - 
-                           (roomData.roundResult?.oldScores?.[sipahiPlayer.id] || 0);
+        const scoreChange =
+          (roomData.roundResult?.scores?.[sipahiPlayer.id] || 0) -
+          (roomData.roundResult?.oldScores?.[sipahiPlayer.id] || 0);
         // Sipahi gets 500 if correct, 0 if wrong (Raja gets 1000, Mantri gets 800)
         if (scoreChange === 500) {
           playCorrectGuess();
@@ -279,7 +294,7 @@ const Game = () => {
       setCountdown(3);
       // 🔊 Play countdown sound for new round
       playCountdown();
-      
+
       const countdownInterval = setInterval(() => {
         setCountdown((prev) => {
           if (prev === 1) {
@@ -296,7 +311,7 @@ const Game = () => {
         setShowCardAnimation(true);
         // 🔊 Play card shuffle sound for new round
         playCardShuffle();
-        
+
         // Hide card animation after 3 seconds
         setTimeout(() => {
           setShowCardAnimation(false);
@@ -353,7 +368,7 @@ const Game = () => {
       setCardRevealed(true);
       // 🔊 Play card flip sound
       playCardFlip();
-      
+
       // Find my role from players array and set it
       const myPlayer = players.find((p) => p.id === socket?.id);
       if (myPlayer && myPlayer.role) {
@@ -394,7 +409,7 @@ const Game = () => {
 
     // 🔊 Play button click sound
     playButtonClick();
-    
+
     setIsTimerRunning(false);
     socket.emit("mantri-call-sipahi", roomCode);
     console.log("✅ Event emitted!");
@@ -403,7 +418,7 @@ const Game = () => {
   const handleSipahiGuess = (guessedPlayerId) => {
     // 🔊 Play button click sound
     playButtonClick();
-    
+
     setIsSipahiTimerRunning(false);
     socket.emit("sipahi-guess", roomCode, guessedPlayerId);
   };
@@ -560,17 +575,15 @@ const Game = () => {
                 toggleMute();
               }}
               className={`${
-                isMuted 
-                  ? "bg-gray-500 hover:bg-gray-600" 
+                isMuted
+                  ? "bg-gray-500 hover:bg-gray-600"
                   : "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
               } text-white p-2 rounded-lg shadow-lg border ${
                 isMuted ? "border-gray-300" : "border-purple-300"
               } flex items-center justify-center`}
               title={isMuted ? "Unmute Sound" : "Mute Sound"}
             >
-              <span className="text-xl">
-                {isMuted ? "🔇" : "🔊"}
-              </span>
+              <span className="text-xl">{isMuted ? "🔇" : "🔊"}</span>
             </motion.button>
 
             {/* Chat Toggle for Mobile */}
