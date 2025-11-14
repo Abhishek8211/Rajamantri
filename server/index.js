@@ -38,9 +38,24 @@ const BOT_PERSONALITIES = {
   NOVICE: "novice", // 10% correct guesses
 };
 
-// Generate random room code
+// BUG FIX #8: Generate unique room codes with collision detection
 function generateRoomCode() {
-  return Math.random().toString(36).substring(2, 8).toUpperCase();
+  let code;
+  let attempts = 0;
+
+  do {
+    code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    attempts++;
+  } while (rooms.has(code) && attempts < 100);
+
+  // Fallback: add timestamp if too many collisions
+  if (attempts >= 100) {
+    code =
+      Math.random().toString(36).substring(2, 6).toUpperCase() +
+      Date.now().toString().slice(-2);
+  }
+
+  return code;
 }
 
 // Create computer player
@@ -333,7 +348,9 @@ io.on("connection", (socket) => {
   // Join existing room
   socket.on("join-room", (data) => {
     const { roomCode, username } = data;
-    const room = rooms.get(roomCode);
+    // BUG FIX #5: Normalize room code (uppercase, trim)
+    const normalizedRoomCode = roomCode.toUpperCase().trim();
+    const room = rooms.get(normalizedRoomCode);
 
     if (!room) {
       socket.emit("error", "Room not found");
@@ -367,15 +384,15 @@ io.on("connection", (socket) => {
     };
 
     room.players.push(player);
-    players.set(socket.id, { roomCode, username });
+    players.set(socket.id, { roomCode: normalizedRoomCode, username });
 
-    socket.join(roomCode);
+    socket.join(normalizedRoomCode);
 
     // Send room data to the joining player
     socket.emit("room-joined", room);
 
     // Broadcast to ALL players in the room (including the new one)
-    io.to(roomCode).emit("room-updated", room);
+    io.to(normalizedRoomCode).emit("room-updated", room);
 
     // Send system message about player joining
     const systemMessage = {
@@ -387,9 +404,9 @@ io.on("connection", (socket) => {
       playerId: "system",
     };
     room.chatMessages.push(systemMessage);
-    io.to(roomCode).emit("new-chat-message", systemMessage);
+    io.to(normalizedRoomCode).emit("new-chat-message", systemMessage);
 
-    console.log(`👤 Player ${username} joined room ${roomCode}`);
+    console.log(`👤 Player ${username} joined room ${normalizedRoomCode}`);
     console.log(
       `👥 All players in room ${roomCode}:`,
       room.players.map((p) => p.username)
@@ -692,8 +709,20 @@ io.on("connection", (socket) => {
     // Remove the player
     room.players = room.players.filter((p) => p.id !== playerId);
 
-    // If it was a real player (not bot), remove from players map
-    if (!playerToRemove.isBot) {
+    // BUG FIX #3: Clean up bot-specific resources
+    if (playerToRemove.isBot) {
+      // Clear any bot timers
+      if (playerToRemove.revealTimer) {
+        clearTimeout(playerToRemove.revealTimer);
+      }
+      if (playerToRemove.guessTimer) {
+        clearTimeout(playerToRemove.guessTimer);
+      }
+      if (playerToRemove.chatTimer) {
+        clearTimeout(playerToRemove.chatTimer);
+      }
+    } else {
+      // If it was a real player, remove from players map
       players.delete(playerId);
 
       // Disconnect the player's socket
@@ -742,6 +771,21 @@ io.on("connection", (socket) => {
       const room = rooms.get(player.roomCode);
       if (room) {
         const disconnectedPlayer = room.players.find((p) => p.id === socket.id);
+
+        // BUG FIX #1: Clear all timers associated with this player/room
+        if (room.mantriTimer) {
+          clearTimeout(room.mantriTimer);
+          room.mantriTimer = null;
+        }
+        if (room.sipahiTimer) {
+          clearTimeout(room.sipahiTimer);
+          room.sipahiTimer = null;
+        }
+        if (room.roundTimer) {
+          clearTimeout(room.roundTimer);
+          room.roundTimer = null;
+        }
+
         room.players = room.players.filter((p) => p.id !== socket.id);
 
         if (room.players.length === 0) {
