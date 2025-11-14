@@ -23,7 +23,11 @@ const Lobby = () => {
 
   const addToast = useCallback((message, type = "error", duration = 5000) => {
     const id = Date.now();
-    setToasts((prev) => [...prev, { id, message, type, duration }]);
+    setToasts((prev) => {
+      // BUG FIX #2: Limit toast array to prevent memory leak
+      const newToasts = [...prev, { id, message, type, duration }];
+      return newToasts.slice(-5); // Keep only last 5 toasts
+    });
   }, []);
 
   const removeToast = useCallback((id) => {

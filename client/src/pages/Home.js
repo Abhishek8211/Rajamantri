@@ -1,44 +1,56 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { useSocket } from '../contexts/SocketContext';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { useSocket } from "../contexts/SocketContext";
 
 const Home = () => {
-  const [username, setUsername] = useState('');
-  const [roomCode, setRoomCode] = useState('');
+  const [username, setUsername] = useState("");
+  const [roomCode, setRoomCode] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [rounds, setRounds] = useState(10);
   const [addBots, setAddBots] = useState(false);
   const [botCount, setBotCount] = useState(1);
-  const [botDifficulty, setBotDifficulty] = useState('smart');
+  const [botDifficulty, setBotDifficulty] = useState("smart");
   const navigate = useNavigate();
   const { socket } = useSocket();
 
   const handleCreateRoom = () => {
     if (!username.trim()) {
-      alert('Please enter your name!');
+      alert("Please enter your name!");
       return;
     }
-    
+
     setIsCreating(true);
-    socket.emit('create-room', {
+    socket.emit("create-room", {
       username: username,
       rounds: rounds,
       addBots: addBots,
       botCount: botCount,
-      botDifficulty: botDifficulty
+      botDifficulty: botDifficulty,
     });
   };
 
   const handleJoinRoom = () => {
-    if (!username.trim() || !roomCode.trim()) {
-      alert('Please enter your name and room code!');
+    // BUG FIX #6: Validate room code before joining
+    if (!username.trim()) {
+      alert("Please enter your name!");
       return;
     }
-    
-    socket.emit('join-room', {
-      roomCode: roomCode.toUpperCase(),
-      username: username
+
+    if (!roomCode || roomCode.trim().length === 0) {
+      alert("Please enter a room code!");
+      return;
+    }
+
+    const trimmedCode = roomCode.trim();
+    if (trimmedCode.length !== 6) {
+      alert("Room code must be 6 characters!");
+      return;
+    }
+
+    socket.emit("join-room", {
+      roomCode: trimmedCode.toUpperCase(),
+      username: username,
     });
   };
 
@@ -59,14 +71,14 @@ const Home = () => {
       setIsCreating(false);
     };
 
-    socket.on('room-created', handleRoomCreated);
-    socket.on('room-joined', handleRoomJoined);
-    socket.on('error', handleError);
+    socket.on("room-created", handleRoomCreated);
+    socket.on("room-joined", handleRoomJoined);
+    socket.on("error", handleError);
 
     return () => {
-      socket.off('room-created', handleRoomCreated);
-      socket.off('room-joined', handleRoomJoined);
-      socket.off('error', handleError);
+      socket.off("room-created", handleRoomCreated);
+      socket.off("room-joined", handleRoomJoined);
+      socket.off("error", handleError);
     };
   }, [socket, navigate]);
 
@@ -121,11 +133,11 @@ const Home = () => {
               alt="Rajamantri Logo"
               className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-amber-400 shadow-2xl object-cover"
               onError={(e) => {
-                e.target.style.display = 'none';
+                e.target.style.display = "none";
               }}
             />
           </motion.div>
-          
+
           <div className="text-left">
             <motion.h1
               animate={{
@@ -216,8 +228,8 @@ const Home = () => {
                       onClick={() => setRounds(round)}
                       className={`py-2 px-2 rounded-lg font-bold text-base transition-all shadow-lg ${
                         rounds === round
-                          ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white ring-2 ring-white/50'
-                          : 'bg-white/20 text-white hover:bg-white/30'
+                          ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white ring-2 ring-white/50"
+                          : "bg-white/20 text-white hover:bg-white/30"
                       }`}
                     >
                       {round}
@@ -262,8 +274,8 @@ const Home = () => {
                             onClick={() => setBotCount(count)}
                             className={`py-1.5 px-2 rounded-lg font-bold text-sm transition-all ${
                               botCount === count
-                                ? 'bg-blue-500 text-white ring-2 ring-white'
-                                : 'bg-white/20 text-white hover:bg-white/30'
+                                ? "bg-blue-500 text-white ring-2 ring-white"
+                                : "bg-white/20 text-white hover:bg-white/30"
                             }`}
                           >
                             {count}
@@ -279,9 +291,9 @@ const Home = () => {
                       </label>
                       <div className="grid grid-cols-3 gap-2">
                         {[
-                          { value: 'smart', label: 'Hard', emoji: '🔥' },
-                          { value: 'random', label: 'Medium', emoji: '⚡' },
-                          { value: 'novice', label: 'Easy', emoji: '🌱' },
+                          { value: "smart", label: "Hard", emoji: "🔥" },
+                          { value: "random", label: "Medium", emoji: "⚡" },
+                          { value: "novice", label: "Easy", emoji: "🌱" },
                         ].map((difficulty) => (
                           <motion.button
                             key={difficulty.value}
@@ -290,8 +302,8 @@ const Home = () => {
                             onClick={() => setBotDifficulty(difficulty.value)}
                             className={`py-1.5 px-2 rounded-lg font-bold text-xs transition-all ${
                               botDifficulty === difficulty.value
-                                ? 'bg-green-500 text-white ring-2 ring-white'
-                                : 'bg-white/20 text-white hover:bg-white/30'
+                                ? "bg-green-500 text-white ring-2 ring-white"
+                                : "bg-white/20 text-white hover:bg-white/30"
                             }`}
                           >
                             <div className="text-sm">{difficulty.emoji}</div>
@@ -314,9 +326,24 @@ const Home = () => {
               >
                 {isCreating ? (
                   <span className="flex items-center justify-center">
-                    <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    <svg
+                      className="animate-spin h-5 w-5 mr-2"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
                     </svg>
                     Creating...
                   </span>
@@ -332,7 +359,12 @@ const Home = () => {
                 <p>🎯 {rounds} Rounds • 4 Players</p>
                 {addBots && (
                   <p className="text-blue-300 mt-0.5">
-                    🤖 {botCount} AI • {botDifficulty === 'smart' ? 'Hard' : botDifficulty === 'random' ? 'Medium' : 'Easy'}
+                    🤖 {botCount} AI •{" "}
+                    {botDifficulty === "smart"
+                      ? "Hard"
+                      : botDifficulty === "random"
+                      ? "Medium"
+                      : "Easy"}
                   </p>
                 )}
               </div>
@@ -451,7 +483,7 @@ const Home = () => {
           </p>
           <motion.button
             whileHover={{ scale: 1.05 }}
-            onClick={() => window.location.href = '/showcase'}
+            onClick={() => (window.location.href = "/showcase")}
             className="mt-3 text-amber-300 hover:text-amber-200 text-sm font-bold underline"
           >
             🎨 View Animation Showcase
