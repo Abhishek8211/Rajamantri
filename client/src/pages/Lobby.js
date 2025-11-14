@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSocket } from "../contexts/SocketContext";
 import { ToastContainer } from "../components/Toast";
+import ConfirmModal from "../components/ConfirmModal";
 
 const Lobby = () => {
   const { roomCode } = useParams();
@@ -14,15 +15,20 @@ const Lobby = () => {
   const [toasts, setToasts] = useState([]);
   const [botCount, setBotCount] = useState(0);
   const [showBotControls, setShowBotControls] = useState(false);
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    playerId: null,
+    playerName: "",
+  });
 
-  const addToast = (message, type = "error", duration = 5000) => {
+  const addToast = useCallback((message, type = "error", duration = 5000) => {
     const id = Date.now();
     setToasts((prev) => [...prev, { id, message, type, duration }]);
-  };
+  }, []);
 
-  const removeToast = (id) => {
+  const removeToast = useCallback((id) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
-  };
+  }, []);
 
   useEffect(() => {
     if (!socket) {
@@ -172,18 +178,27 @@ const Lobby = () => {
       return;
     }
 
-    // Confirm removal
-    if (
-      window.confirm(
-        `Are you sure you want to remove ${playerName} from the lobby?`
-      )
-    ) {
+    // Open confirmation modal
+    setConfirmModal({
+      isOpen: true,
+      playerId,
+      playerName,
+    });
+  };
+
+  const confirmRemovePlayer = () => {
+    const { playerId, playerName } = confirmModal;
+
+    if (playerId && playerName) {
       socket.emit("remove-player", {
         roomCode,
         playerId,
       });
       addToast(`✅ ${playerName} has been removed`, "success", 3000);
     }
+
+    // Close modal
+    setConfirmModal({ isOpen: false, playerId: null, playerName: "" });
   };
 
   const copyRoomCode = () => {
@@ -498,6 +513,18 @@ const Lobby = () => {
 
       {/* Toast Notifications */}
       <ToastContainer toasts={toasts} removeToast={removeToast} />
+
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() =>
+          setConfirmModal({ isOpen: false, playerId: null, playerName: "" })
+        }
+        onConfirm={confirmRemovePlayer}
+        title="Remove Player?"
+        message="Are you sure you want to remove this player from the lobby?"
+        playerName={confirmModal.playerName}
+      />
     </div>
   );
 };
