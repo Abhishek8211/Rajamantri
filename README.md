@@ -138,10 +138,20 @@ npm start
 
 - **Remove any player** (humans or bots) with × button
 - Only host sees remove buttons (on other players)
-- Confirmation dialog prevents accidents
+- **Beautiful confirmation modal** - Animated dialog replaces browser alerts
 - Removed players get notified and redirected
 - Chat announces all removals
 - Real-time lobby updates for everyone
+
+**Confirmation Modal Features:**
+
+- Gradient design with animated warning icon
+- Shake animation on icon appearance
+- Player card showing who will be removed
+- "Cannot be undone" warning message
+- Cancel/Remove buttons with hover effects
+- Backdrop blur with click-outside-to-close
+- Spring physics animations (scale + fade)
 
 **Safety Features:**
 
@@ -157,10 +167,12 @@ npm start
 - **Top-center positioning** - Never overlaps game UI
 - **4 color-coded types** - Error (red), Warning (amber), Success (green), Info (blue)
 - **Smooth animations** - Slide down with spring physics
-- **Auto-dismiss** - Progress bar shows countdown
+- **Auto-dismiss timer** - Progress bar shows countdown (5s default)
+- **Fixed auto-dismiss bug** - useCallback ensures proper timer execution
 - **Manual close** - Rotating × button
 - **Icon animations** - Shake effect on appear
 - **Multiple toasts** - Stack properly without overlap
+- **Memory optimized** - Stable function references prevent re-renders
 
 ### 🎨 UI/UX Improvements
 
@@ -305,6 +317,7 @@ Rajamantri/
 │   │   ├── components/
 │   │   │   ├── Chat.js             # Real-time chat with scrollable layout
 │   │   │   ├── Toast.js            # Notification system (NEW) ⭐
+│   │   │   ├── ConfirmModal.js     # Beautiful confirmation dialogs (NEW) ⭐
 │   │   │   ├── RoleRevealAnimation.js  # 4-stage cinematic reveal
 │   │   │   ├── AnimatedCard.js     # 3D flipping role cards
 │   │   │   ├── CardDeck.js         # Card distribution animation
@@ -1037,17 +1050,32 @@ socket.on("kicked-from-room", ({ message }) => {
 3. Join a different room or create your own
 4. Cannot rejoin same room immediately
 
-#### ❌ Toast notifications not appearing
+#### ❌ Toast notifications not appearing or not auto-dismissing
 
-**Problem**: No notification popups showing
+**Problem**: No notification popups showing or they don't disappear automatically
 
 **Solutions**:
 
-1. Check browser console for JavaScript errors
-2. Clear browser cache and reload (Ctrl+Shift+Delete)
-3. Disable browser extensions that might block popups
-4. Try different browser (Chrome, Firefox, Edge)
-5. Check if z-index is being overridden by custom CSS
+1. **Auto-dismiss fix**: Updated to useCallback for stable timer execution
+2. Check browser console for JavaScript errors
+3. Clear browser cache and reload (Ctrl+Shift+Delete)
+4. Disable browser extensions that might block popups
+5. Try different browser (Chrome, Firefox, Edge)
+6. Check if z-index is being overridden by custom CSS
+7. Ensure React hooks (useCallback) are properly imported
+
+#### ❌ Confirmation modal not appearing when removing player
+
+**Problem**: Browser alert shows instead of beautiful modal, or nothing happens
+
+**Solutions**:
+
+1. Ensure ConfirmModal component is imported in Lobby.js
+2. Check confirmModal state is properly initialized
+3. Verify AnimatePresence is wrapping modal content
+4. Clear browser cache and hard reload (Ctrl+Shift+F5)
+5. Check browser console for React errors
+6. Ensure Framer Motion is installed (`npm install framer-motion`)
 
 #### ❌ Bots not playing
 
